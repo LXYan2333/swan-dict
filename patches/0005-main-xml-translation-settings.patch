@@ -1,5 +1,5 @@
---- upstream/contents/config/main.xml	2026-06-02 02:53:44.280620983 +0800
-+++ current/contents/config/main.xml	2026-06-02 02:53:44.280620983 +0800
+--- upstream/contents/config/main.xml	2026-06-02 02:55:55.964627714 +0800
++++ current/contents/config/main.xml	2026-06-02 02:55:55.968627714 +0800
 @@ -112,5 +112,21 @@
        </choices>
        <default>0</default>

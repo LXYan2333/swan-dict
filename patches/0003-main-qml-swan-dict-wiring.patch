@@ -1,5 +1,5 @@
---- upstream/contents/main.qml	2026-06-02 02:53:44.268620982 +0800
-+++ current/contents/main.qml	2026-06-02 02:53:44.272620982 +0800
+--- upstream/contents/main.qml	2026-06-02 02:55:55.956627714 +0800
++++ current/contents/main.qml	2026-06-02 02:55:55.956627714 +0800
 @@ -17,6 +17,7 @@
  import org.kde.kirigami as Kirigami
  import org.kde.config as KConfig

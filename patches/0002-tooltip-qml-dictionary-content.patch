@@ -1,5 +1,5 @@
---- upstream/contents/Tooltip.qml	2026-06-02 02:53:44.264620982 +0800
-+++ current/contents/Tooltip.qml	2026-06-02 02:53:44.268620982 +0800
+--- upstream/contents/Tooltip.qml	2026-06-02 02:55:55.952627713 +0800
++++ current/contents/Tooltip.qml	2026-06-02 02:55:55.952627713 +0800
 @@ -17,7 +17,6 @@
      id: toolTipContentItem
  

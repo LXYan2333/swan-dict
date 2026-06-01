@@ -1,5 +1,7 @@
 # Swan Dict 天鹅词典
 
+![Swan Dict](assets/swan-2494916.jpg)
+
 Swan Dict 是一个 KDE Plasma 6 小组件，基于系统自带的 Digital Clock 改造。
 
 它会读取当前 primary selection：
