@@ -1,0 +1,14 @@
+--- upstream/contents/config/config.qml	2026-06-02 02:53:44.276620982 +0800
++++ current/contents/config/config.qml	2026-06-02 02:53:44.276620982 +0800
+@@ -32,6 +32,11 @@
+         source: "configTimeZones.qml"
+         includeMargins: false
+     }
++    ConfigCategory {
++        name: i18n("Translation")
++        icon: "preferences-desktop-locale"
++        source: "configTranslation.qml"
++    }
+ 
+     readonly property PlasmaCalendar.EventPluginsManager eventPluginsManager: PlasmaCalendar.EventPluginsManager {
+         Component.onCompleted: {

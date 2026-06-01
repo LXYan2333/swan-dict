@@ -1,0 +1,23 @@
+{
+    "KPlugin": {
+        "Authors": [
+            {
+                "Email": "z00823823@outlook.com",
+                "Name": "LXYan"
+            }
+        ],
+        "Category": "Language",
+        "Description": "Peek selected text translation",
+        "Description[zh_CN]": "查看选中文本的翻译",
+        "Icon": "accessories-dictionary",
+        "Id": "com.github.LXYan2333.swan-dict",
+        "Name": "Swan Dictionary",
+        "Name[zh_CN]": "天鹅词典",
+        "License": "GPL-2.0+",
+        "Version": "1",
+        "Website": "https://github.com/LXYan2333/swan-dict",
+        "BugReportUrl": "https://github.com/LXYan2333/swan-dict/issues"
+    },
+    "X-Plasma-API-Minimum-Version": "6.0",
+    "KPackageStructure": "Plasma/Applet"
+}

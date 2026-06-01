@@ -1,0 +1,162 @@
+--- upstream/contents/main.qml	2026-06-02 02:53:44.268620982 +0800
++++ current/contents/main.qml	2026-06-02 02:53:44.272620982 +0800
+@@ -17,6 +17,7 @@
+ import org.kde.kirigami as Kirigami
+ import org.kde.config as KConfig
+ import org.kde.kcmutils as KCMUtils
++import com.github.LXYan2333.SwanDict
+ 
+ PlasmoidItem {
+     id: root
+@@ -27,6 +28,21 @@
+     Plasmoid.backgroundHints: PlasmaCore.Types.ShadowBackground | PlasmaCore.Types.ConfigurableBackground
+ 
+     readonly property string dateFormatString: setDateFormatString()
++    property var dictEntry: ({})
++    property string sentenceTranslation: ""
++    property string sentenceTranslationError: ""
++    property string sentenceTranslationQuery: ""
++    property bool sentenceTranslationBusy: false
++    property bool sentenceTranslationRequested: false
++    readonly property bool hasDictEntry: dictEntry
++        && dictEntry.summary !== undefined
++        && dictEntry.summary.length > 0
++        && dictEntry.fullText !== undefined
++        && dictEntry.fullText.length > 0
++    readonly property bool canTranslateSelectedSentence: hasDictEntry
++        && dictEntry.isSplitEntry === true
++        && Plasmoid.configuration.enableDeepSeekSentenceTranslation
++        && (Plasmoid.configuration.deepSeekApiKey ?? "").trim().length > 0
+ 
+     readonly property date currentDateTimeInSelectedTimeZone: {
+         const data = dataSource.data[Plasmoid.configuration.lastSelectedTimezone];
+@@ -128,7 +144,32 @@
+ 
+     preferredRepresentation: compactRepresentation
+ 
+-    fullRepresentation: CalendarView { }
++    fullRepresentation: Loader {
++        Layout.minimumWidth: item ? item.Layout.minimumWidth : 0
++        Layout.minimumHeight: item ? item.Layout.minimumHeight : 0
++        Layout.preferredWidth: item ? item.Layout.preferredWidth : 0
++        Layout.preferredHeight: item ? item.Layout.preferredHeight : 0
++
++        sourceComponent: root.hasDictEntry ? dictionaryPopupComponent : calendarPopupComponent
++    }
++
++    Component {
++        id: calendarPopupComponent
++        CalendarView { }
++    }
++
++    Component {
++        id: dictionaryPopupComponent
++        DictionaryPopup {
++            dictEntry: root.dictEntry
++            sentenceTranslation: root.sentenceTranslation
++            sentenceTranslationBusy: root.sentenceTranslationBusy
++            sentenceTranslationError: root.sentenceTranslationError
++            sentenceTranslationAvailable: root.canTranslateSelectedSentence
++            sentenceTranslationRequested: root.sentenceTranslationRequested
++            onRequestSentenceTranslation: root.requestSentenceTranslation()
++        }
++    }
+ 
+     compactRepresentation: Loader {
+         id: conditionalLoader
+@@ -201,6 +242,88 @@
+         }
+     }
+ 
++    SelectionWatcher {
++        id: selectionWatcher
++        interval: 500
++    }
++
++    Translator {
++        id: translator
++        databaseUrl: Qt.resolvedUrl("../data/ecdict.sqlite")
++        maximumSelectionLength: Plasmoid.configuration.maximumSelectionLength
++        dateReplacementMaximumLength: Plasmoid.configuration.dateReplacementTranslationMaximumLength
++    }
++
++    function clearSentenceTranslation() {
++        root.sentenceTranslation = "";
++        root.sentenceTranslationError = "";
++        root.sentenceTranslationQuery = "";
++        root.sentenceTranslationBusy = false;
++        root.sentenceTranslationRequested = false;
++        translator.cancelSentenceTranslation();
++    }
++
++    function requestSentenceTranslation() {
++        if (!root.canTranslateSelectedSentence) {
++            return;
++        }
++
++        const query = selectionWatcher.text ?? root.dictEntry.query ?? root.dictEntry.matchedWord ?? "";
++        if (query.length === 0) {
++            return;
++        }
++
++        root.sentenceTranslationRequested = true;
++        root.sentenceTranslation = "";
++        root.sentenceTranslationError = "";
++        root.sentenceTranslationQuery = query;
++        root.sentenceTranslationBusy = true;
++        translator.translateSentenceWithDeepSeek(query, Plasmoid.configuration.deepSeekApiKey ?? "");
++    }
++
++    function updateDictEntry() {
++        root.dictEntry = translator.lookup(selectionWatcher.text);
++        root.clearSentenceTranslation();
++    }
++
++    Connections {
++        target: selectionWatcher
++        function onTextChanged() {
++            root.updateDictEntry();
++        }
++    }
++
++    Connections {
++        target: translator
++        function onSentenceTranslationReady(selectedText, translation) {
++            if (selectedText !== root.sentenceTranslationQuery) {
++                return;
++            }
++
++            root.sentenceTranslation = translation;
++            root.sentenceTranslationError = "";
++            root.sentenceTranslationBusy = false;
++            root.sentenceTranslationRequested = false;
++        }
++
++        function onSentenceTranslationFailed(selectedText, message) {
++            if (selectedText !== root.sentenceTranslationQuery) {
++                return;
++            }
++
++            root.sentenceTranslation = "";
++            root.sentenceTranslationError = message;
++            root.sentenceTranslationBusy = false;
++            root.sentenceTranslationRequested = false;
++        }
++    }
++
++    onExpandedChanged: {
++        if (!expanded) {
++            root.clearSentenceTranslation();
++        }
++    }
++
+     function setDateFormatString() {
+         // remove "dddd" from the locale format string
+         // /all/ locales in LongFormat have "dddd" either
+@@ -235,5 +358,6 @@
+         ClipboardMenu.setupMenu(clipboardAction);
+ 
+         initTimeZones();
++        updateDictEntry();
+     }
+ }

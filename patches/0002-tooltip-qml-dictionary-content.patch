@@ -1,0 +1,249 @@
+--- upstream/contents/Tooltip.qml	2026-06-02 02:53:44.264620982 +0800
++++ current/contents/Tooltip.qml	2026-06-02 02:53:44.268620982 +0800
+@@ -17,7 +17,6 @@
+     id: toolTipContentItem
+ 
+     property int preferredTextWidth: Kirigami.Units.gridUnit * 20
+-
+     implicitWidth: mainLayout.implicitWidth + Kirigami.Units.gridUnit
+     implicitHeight: mainLayout.implicitHeight + Kirigami.Units.gridUnit
+ 
+@@ -31,8 +30,11 @@
+      * These accessible properties are used in the compact representation,
+      * not here.
+      */
+-    Accessible.name: i18nc("@info:tooltip %1 is a localized long date", "Today is %1", tooltipSubtext.text)
++    Accessible.name: root.hasDictEntry ? root.dictEntry.matchedWord : i18nc("@info:tooltip %1 is a localized long date", "Today is %1", tooltipSubtext.text)
+     Accessible.description: {
++        if (root.hasDictEntry) {
++            return root.dictEntry.fullText;
++        }
+         const description = tooltipSubLabelText.visible ? [tooltipSubLabelText.text] : [];
+         for (let i = 0; i < timeZoneRepeater.count; i += 2) {
+             description.push(`${timeZoneRepeater.itemAt(i).text}: ${timeZoneRepeater.itemAt(i + 1).text}`);
+@@ -52,6 +54,190 @@
+         spacing: 0
+ 
+         Kirigami.Heading {
++            Layout.minimumWidth: Math.min(implicitWidth, toolTipContentItem.preferredTextWidth)
++            Layout.maximumWidth: toolTipContentItem.preferredTextWidth
++
++            level: 3
++            elide: Text.ElideRight
++            text: root.hasDictEntry ? root.dictEntry.matchedWord : ""
++            textFormat: Text.PlainText
++            visible: root.hasDictEntry && root.dictEntry.isSplitEntry !== true
++        }
++
++        PlasmaComponents.Label {
++            Layout.minimumWidth: Math.min(implicitWidth, toolTipContentItem.preferredTextWidth)
++            Layout.maximumWidth: toolTipContentItem.preferredTextWidth
++            maximumLineCount: 16
++            wrapMode: Text.Wrap
++
++            text: root.hasDictEntry ? [root.dictEntry.phonetic]
++                .filter(value => value !== undefined && value.length > 0)
++                .join("\n\n") : ""
++            textFormat: Text.PlainText
++            visible: root.hasDictEntry && text.length > 0
++        }
++
++        ColumnLayout {
++            Layout.minimumWidth: Math.min(implicitWidth, toolTipContentItem.preferredTextWidth)
++            Layout.maximumWidth: toolTipContentItem.preferredTextWidth
++            spacing: Kirigami.Units.smallSpacing
++            visible: root.hasDictEntry
++                && root.dictEntry.translationRows !== undefined
++                && root.dictEntry.translationRows.length > 0
++
++            Repeater {
++                model: root.dictEntry.translationRows ?? []
++
++                RowLayout {
++                    required property var modelData
++
++                    Layout.fillWidth: true
++                    spacing: Kirigami.Units.smallSpacing
++
++                    ColumnLayout {
++                        Layout.fillWidth: true
++                        spacing: Kirigami.Units.smallSpacing
++
++                        PlasmaComponents.Label {
++                            Layout.fillWidth: true
++                            visible: modelData.word !== undefined && modelData.word.length > 0
++                            text: modelData.word ?? ""
++                            elide: Text.ElideRight
++                            textFormat: Text.PlainText
++                        }
++
++                        RowLayout {
++                            Layout.fillWidth: true
++                            visible: modelData.isWarning !== true
++                            spacing: Kirigami.Units.smallSpacing
++
++                            PlasmaComponents.Label {
++                                Layout.alignment: Qt.AlignLeft | Qt.AlignTop
++                                Layout.preferredWidth: Kirigami.Units.gridUnit * 1.6
++                                text: modelData.pos
++                                opacity: 0.5
++                                textFormat: Text.PlainText
++                            }
++
++                            Item {
++                                Layout.preferredWidth: Kirigami.Units.smallSpacing
++                            }
++
++                            PlasmaComponents.Label {
++                                Layout.alignment: Qt.AlignTop
++                                Layout.fillWidth: true
++                                text: modelData.text
++                                wrapMode: Text.Wrap
++                                textFormat: Text.PlainText
++                            }
++                        }
++
++                        Kirigami.Heading {
++                            Layout.fillWidth: true
++                            level: 4
++                            visible: modelData.isWarning === true
++                            text: modelData.text
++                            color: Kirigami.Theme.negativeTextColor
++                            font.bold: true
++                            wrapMode: Text.Wrap
++                            textFormat: Text.PlainText
++                        }
++                    }
++                }
++            }
++        }
++
++        ColumnLayout {
++            Layout.minimumWidth: Math.min(implicitWidth, toolTipContentItem.preferredTextWidth)
++            Layout.maximumWidth: toolTipContentItem.preferredTextWidth
++            spacing: Kirigami.Units.smallSpacing
++            visible: root.hasDictEntry
++                && root.dictEntry.definitionRows !== undefined
++                && root.dictEntry.definitionRows.length > 0
++
++            Repeater {
++                model: root.dictEntry.definitionRows ?? []
++
++                RowLayout {
++                    required property var modelData
++
++                    Layout.fillWidth: true
++                    spacing: Kirigami.Units.smallSpacing
++
++                    PlasmaComponents.Label {
++                        Layout.alignment: Qt.AlignLeft | Qt.AlignTop
++                        Layout.preferredWidth: Kirigami.Units.gridUnit * 1.6
++                        text: modelData.pos
++                        opacity: 0.5
++                        textFormat: Text.PlainText
++                    }
++
++                    Item {
++                        Layout.preferredWidth: Kirigami.Units.smallSpacing
++                    }
++
++                    PlasmaComponents.Label {
++                        Layout.alignment: Qt.AlignTop
++                        Layout.fillWidth: true
++                        text: modelData.text
++                        wrapMode: Text.Wrap
++                        textFormat: Text.PlainText
++                    }
++                }
++            }
++        }
++
++        PlasmaComponents.Label {
++            Layout.minimumWidth: Math.min(implicitWidth, toolTipContentItem.preferredTextWidth)
++            Layout.maximumWidth: toolTipContentItem.preferredTextWidth
++            maximumLineCount: 8
++            wrapMode: Text.Wrap
++
++            text: root.hasDictEntry ? root.dictEntry.definition ?? "" : ""
++            textFormat: Text.PlainText
++            visible: root.hasDictEntry
++                && text.length > 0
++                && (root.dictEntry.definitionRows === undefined
++                    || root.dictEntry.definitionRows.length === 0)
++        }
++
++        ColumnLayout {
++            Layout.minimumWidth: Math.min(implicitWidth, toolTipContentItem.preferredTextWidth)
++            Layout.maximumWidth: toolTipContentItem.preferredTextWidth
++            Layout.topMargin: Kirigami.Units.smallSpacing
++            spacing: Kirigami.Units.smallSpacing
++            visible: root.hasDictEntry
++                && root.dictEntry.exchangeRows !== undefined
++                && root.dictEntry.exchangeRows.length > 0
++
++            Repeater {
++                model: root.dictEntry.exchangeRows ?? []
++
++                RowLayout {
++                    required property var modelData
++
++                    Layout.fillWidth: true
++                    spacing: Kirigami.Units.smallSpacing
++
++                    PlasmaComponents.Label {
++                        Layout.preferredWidth: implicitWidth
++                        text: modelData.label
++                        opacity: 0.7
++                        wrapMode: Text.Wrap
++                        textFormat: Text.PlainText
++                    }
++
++                    PlasmaComponents.Label {
++                        Layout.fillWidth: true
++                        text: modelData.value
++                        wrapMode: Text.Wrap
++                        textFormat: Text.PlainText
++                    }
++                }
++            }
++        }
++
++        Kirigami.Heading {
+             id: tooltipMaintext
+ 
+             Layout.minimumWidth: Math.min(implicitWidth, toolTipContentItem.preferredTextWidth)
+@@ -64,6 +250,7 @@
+             property bool anyTimezoneSet: !!mainText
+             text: anyTimezoneSet ? mainText : i18nc("@label main text shown in digital clock's tooltip when timezone is missing", "Time zone is not set")
+             textFormat: Text.PlainText
++            visible: !root.hasDictEntry
+         }
+ 
+         PlasmaComponents.Label {
+@@ -85,7 +272,7 @@
+             }
+             text: tooltipMaintext.anyTimezoneSet ? subText : i18nc("@label sub text shown in digital clock's tooltip when timezone is missing", "Click the clock icon to open Date & Time settings and set a time zone.")
+             opacity: 0.6
+-            visible: !clocks.visible
++            visible: !root.hasDictEntry && !clocks.visible
+             font.features: { "tnum": 1 }
+         }
+ 
+@@ -96,7 +283,7 @@
+             text: (root.fullRepresentationItem as CalendarView)?.monthView.todayAuxilliaryText ?? ""
+             textFormat: Text.PlainText
+             opacity: 0.6
+-            visible: !clocks.visible && text.length > 0
++            visible: !root.hasDictEntry && !clocks.visible && text.length > 0
+         }
+ 
+         GridLayout {
+@@ -105,7 +292,7 @@
+             Layout.minimumWidth: Math.min(implicitWidth, toolTipContentItem.preferredTextWidth)
+             Layout.maximumWidth: toolTipContentItem.preferredTextWidth
+             Layout.minimumHeight: childrenRect.height
+-            visible: timeZoneRepeater.count > 0 && tooltipMaintext.anyTimezoneSet
++            visible: !root.hasDictEntry && timeZoneRepeater.count > 0 && tooltipMaintext.anyTimezoneSet
+             columns: 2
+             rowSpacing: 0
+ 

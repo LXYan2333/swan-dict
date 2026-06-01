@@ -1,0 +1,62 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: swan-dict\n"
+"Report-Msgid-Bugs-To: https://github.com/LXYan2333/swan-dict\n"
+"POT-Creation-Date: 2026-06-02 00:00+0800\n"
+"PO-Revision-Date: 2026-06-02 00:00+0800\n"
+"Last-Translator: LXYan <z00823823@outlook.com>\n"
+"Language-Team: Chinese Simplified\n"
+"Language: zh_CN\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=1; plural=0;\n"
+
+msgid "Translation"
+msgstr "翻译"
+
+msgid "Copy dictionary entry"
+msgstr "复制词典条目"
+
+msgid "Translate again with DeepSeek"
+msgstr "重新使用 DeepSeek 翻译"
+
+msgid "Translate with DeepSeek"
+msgstr "使用 DeepSeek 翻译"
+
+msgid "Translating selected text..."
+msgstr "正在翻译选中文本..."
+
+msgid "Dictionary selection limit:"
+msgstr "词典选区限制："
+
+msgid "%1 character"
+msgid_plural "%1 characters"
+msgstr[0] "%1 个字符"
+
+msgid "Date replacement length:"
+msgstr "日期替换长度："
+
+msgid "Sentence translation:"
+msgstr "句子翻译："
+
+msgid "Use DeepSeek when opening the popup for multi-word selections"
+msgstr "打开多词选区弹窗时允许使用 DeepSeek"
+
+msgid "DeepSeek API key:"
+msgstr "DeepSeek API 密钥："
+
+msgid "sk-..."
+msgstr "sk-..."
+
+msgid "Selection exceeded %1 characters; translated first %2 characters."
+msgstr "选区超过 %1 个字符；已翻译前 %2 个字符。"
+
+msgid "DeepSeek API key is empty."
+msgstr "DeepSeek API 密钥为空。"
+
+msgid "DeepSeek returned no translation."
+msgstr "DeepSeek 未返回翻译。"
+
+msgid "DeepSeek returned an empty translation."
+msgstr "DeepSeek 返回了空翻译。"

@@ -1,0 +1,14 @@
+build/
+applet/contents/config/
+applet/contents/ui/CalendarView.qml
+applet/contents/ui/DigitalClock.qml
+applet/contents/ui/NoTimezoneWarning.qml
+applet/contents/ui/Tooltip.qml
+applet/contents/ui/configAppearance.qml
+applet/contents/ui/configCalendar.qml
+!applet/contents/ui/configTranslation.qml
+applet/contents/ui/configTimeZones.qml
+applet/contents/ui/main.qml
+applet/contents/data/ecdict.sqlite
+.cache/
+__pycache__/

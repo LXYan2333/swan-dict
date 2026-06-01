@@ -1,0 +1,25 @@
+--- upstream/contents/DigitalClock.qml	2026-06-02 02:53:44.260620982 +0800
++++ current/contents/DigitalClock.qml	2026-06-02 02:53:44.260620982 +0800
+@@ -88,6 +88,13 @@
+     }
+ 
+     Connections {
++        target: root
++        function onDictEntryChanged() {
++            main.setupLabels();
++        }
++    }
++
++    Connections {
+         target: Plasmoid.configuration
+         function onSelectedTimeZonesChanged() {
+             // If the currently selected time zone was removed,
+@@ -720,7 +727,7 @@
+         timeZoneLabel.text = timezoneString;
+ 
+         if (Plasmoid.configuration.showDate) {
+-            dateLabel.text = dateFormatter(getCurrentTime());
++            dateLabel.text = root.hasDictEntry ? root.dictEntry.summary : dateFormatter(getCurrentTime());
+         } else {
+             // clear it so it doesn't take space in the layout
+             dateLabel.text = "";

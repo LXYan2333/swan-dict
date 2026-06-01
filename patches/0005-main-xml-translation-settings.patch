@@ -1,0 +1,24 @@
+--- upstream/contents/config/main.xml	2026-06-02 02:53:44.280620983 +0800
++++ current/contents/config/main.xml	2026-06-02 02:53:44.280620983 +0800
+@@ -112,5 +112,21 @@
+       </choices>
+       <default>0</default>
+     </entry>
++    <entry name="enableDeepSeekSentenceTranslation" type="Bool">
++      <label>Whether DeepSeek should translate multi-word selections when the dictionary popup is opened.</label>
++      <default>false</default>
++    </entry>
++    <entry name="deepSeekApiKey" type="String">
++      <label>DeepSeek API key used for sentence translation.</label>
++      <default></default>
++    </entry>
++    <entry name="dateReplacementTranslationMaximumLength" type="Int">
++      <label>Maximum character count for the dictionary text shown in the compact date replacement.</label>
++      <default>10</default>
++    </entry>
++    <entry name="maximumSelectionLength" type="Int">
++      <label>Maximum selected text length used for local dictionary lookup.</label>
++      <default>128</default>
++    </entry>
+   </group>
+ </kcfg>
