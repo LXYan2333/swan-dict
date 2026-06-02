@@ -1,8 +1,18 @@
 # Swan Dict 天鹅词典
 
-![Swan Dict](assets/swan-2494916.jpg)
+<p align="center">
+  <img src="assets/swan-2494916.jpg" alt="Swan Dict" width="320">
+</p>
 
-Swan Dict 是一个 KDE Plasma 6 小组件，基于系统自带的 Digital Clock 改造。
+Swan Dict 是一个 KDE Plasma 6 小组件，基于系统自带的 Digital Clock 改造。在系统中的任意应用选中单词即可触发划词翻译。翻译内容会取代桌面的日期部分，减少桌面空间的占用。
+
+<p align="center">
+  <img src="assets/屏幕截图_20260602_203624.jpg" alt="work" width="320">
+</p>
+
+将鼠标悬停在小组件上方或点击小组件可以获得更详尽的翻译。
+
+<video src="assets/2026-06-02 20-33-25.mov" width="320" height="240" controls></video>
 
 它会读取当前 primary selection：
 
@@ -122,7 +132,7 @@ cmake --build build
 Wayland 下 primary selection 的提供方有时不会在“视觉上取消选中”时清空 selection。
 因此仅靠 primary-selection 协议有时可能会读到上一次选中的文本。
 
-本项目提供一个可选 KWin effect helper：
+本项目提供一个可选 KWin effect helper（默认开启）：
 
 ```text
 kwin-helper/
@@ -131,7 +141,7 @@ kwin-helper/
 它在 KWin 内部监听全局鼠标按下事件，并通过 session D-Bus 发送信号给小组件。
 小组件如果收不到该信号，会继续使用内置 primary-selection 读取逻辑，不影响运行。
 
-构建辅助 effect （默认开启）：
+构建辅助 effect：
 
 ```console
 cmake -B build -S . -DSWAN_DICT_BUILD_KWIN_HELPER=ON
