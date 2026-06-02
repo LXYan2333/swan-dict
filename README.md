@@ -118,7 +118,7 @@ python3 tools/import-ecdict/import_ecdict.py \
 开发时通常不需要安装小组件，可以直接从源码树启动：
 
 ```console
-QML_IMPORT_PATH=build/src plasmoidviewer -a applet
+QML2_IMPORT_PATH=build/src plasmoidviewer -a applet
 ```
 
 如果修改了 C++ 代码，重新构建：
