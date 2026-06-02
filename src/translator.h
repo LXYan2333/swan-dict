@@ -52,6 +52,7 @@ public:
   private:
     bool ensureDatabase();
     QString normalizeQuery(QString text) const;
+    QString normalizeSentenceQuery(QString text) const;
     QString strippedWord(QString text) const;
     QStringList candidateWords(const QString &word) const;
     QVariantMap lookupCandidate(const QString &word, const QString &sw);
@@ -61,12 +62,14 @@ public:
     QString limitedQueryRespectingWordBoundary(const QString &query) const;
     QStringList splitQueryWords(const QString &query) const;
     QString compactSummary(const QString &translation, const QString &definition) const;
+    QString cleanDateReplacementSummary(QString text) const;
     QString truncateDateReplacement(QString text) const;
     QVariantMap withTruncationNote(QVariantMap entry,
                                    const QString &note) const;
     QString firstTranslationFragment(const QString &translation) const;
     QString fullText(const QString &word, const QString &phonetic, const QString &definition, const QString &translation, const QString &exchange) const;
     QVariantList partOfSpeechRows(const QString &text) const;
+    QString takeLeadingDomainTags(QString *text) const;
     QVariantList exchangeRows(const QString &exchange) const;
     QString exchangeLabel(const QString &key) const;
     QString normalizeDictionaryText(QString text) const;

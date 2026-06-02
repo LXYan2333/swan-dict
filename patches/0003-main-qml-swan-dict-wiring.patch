@@ -1,6 +1,6 @@
---- upstream/contents/main.qml	2026-06-02 02:55:55.956627714 +0800
-+++ current/contents/main.qml	2026-06-02 02:55:55.956627714 +0800
-@@ -17,6 +17,7 @@
+--- upstream/contents/ui/main.qml
++++ current/contents/ui/main.qml
+@@ -17,16 +17,61 @@
  import org.kde.kirigami as Kirigami
  import org.kde.config as KConfig
  import org.kde.kcmutils as KCMUtils
@@ -8,9 +8,41 @@
  
  PlasmoidItem {
      id: root
-@@ -27,6 +28,21 @@
+ 
++    readonly property string upstreamTranslationDomain: "plasma_applet_org.kde.plasma.digitalclock"
++    function i18n(message, arg1, arg2) {
++        if (arguments.length === 3) {
++            return i18nd(upstreamTranslationDomain, message, arg1, arg2);
++        }
++        if (arguments.length === 2) {
++            return i18nd(upstreamTranslationDomain, message, arg1);
++        }
++        return i18nd(upstreamTranslationDomain, message);
++    }
++    function i18nc(context, message, arg1, arg2) {
++        if (arguments.length === 4) {
++            return i18ndc(upstreamTranslationDomain, context, message, arg1, arg2);
++        }
++        if (arguments.length === 3) {
++            return i18ndc(upstreamTranslationDomain, context, message, arg1);
++        }
++        return i18ndc(upstreamTranslationDomain, context, message);
++    }
++
+     width: Kirigami.Units.gridUnit * 10
+     height: Kirigami.Units.gridUnit * 4
+ 
      Plasmoid.backgroundHints: PlasmaCore.Types.ShadowBackground | PlasmaCore.Types.ConfigurableBackground
  
++    TapHandler {
++        acceptedButtons: Qt.LeftButton
++        onPressedChanged: {
++            if (pressed) {
++                selectionWatcher.ignoreNextKWinMouseClick(1000);
++            }
++        }
++    }
++
      readonly property string dateFormatString: setDateFormatString()
 +    property var dictEntry: ({})
 +    property string sentenceTranslation: ""
@@ -30,16 +62,21 @@
  
      readonly property date currentDateTimeInSelectedTimeZone: {
          const data = dataSource.data[Plasmoid.configuration.lastSelectedTimezone];
-@@ -128,7 +144,32 @@
+@@ -128,7 +173,37 @@
  
      preferredRepresentation: compactRepresentation
  
 -    fullRepresentation: CalendarView { }
 +    fullRepresentation: Loader {
-+        Layout.minimumWidth: item ? item.Layout.minimumWidth : 0
-+        Layout.minimumHeight: item ? item.Layout.minimumHeight : 0
-+        Layout.preferredWidth: item ? item.Layout.preferredWidth : 0
-+        Layout.preferredHeight: item ? item.Layout.preferredHeight : 0
++        readonly property int dictionaryPopupWidth: Kirigami.Units.gridUnit * 22
++        readonly property int dictionaryPopupHeight: Kirigami.Units.gridUnit * 18
++
++        Layout.minimumWidth: root.hasDictEntry ? dictionaryPopupWidth : (item ? item.Layout.minimumWidth : 0)
++        Layout.minimumHeight: root.hasDictEntry ? dictionaryPopupHeight : (item ? item.Layout.minimumHeight : 0)
++        Layout.preferredWidth: root.hasDictEntry ? dictionaryPopupWidth : (item ? item.Layout.preferredWidth : 0)
++        Layout.preferredHeight: root.hasDictEntry ? dictionaryPopupHeight : (item ? item.Layout.preferredHeight : 0)
++        Layout.maximumWidth: root.hasDictEntry ? dictionaryPopupWidth : -1
++        Layout.maximumHeight: root.hasDictEntry ? dictionaryPopupHeight : -1
 +
 +        sourceComponent: root.hasDictEntry ? dictionaryPopupComponent : calendarPopupComponent
 +    }
@@ -64,13 +101,27 @@
  
      compactRepresentation: Loader {
          id: conditionalLoader
-@@ -201,6 +242,88 @@
+@@ -180,6 +255,12 @@
+         function onSelectedTimeZonesChanged() {
+             root.initTimeZones();
+         }
++
++        function onStartKWinMouseHelperChanged() {
++            if (Plasmoid.configuration.startKWinMouseHelper) {
++                selectionWatcher.startKWinMouseHelper();
++            }
++        }
+     }
+ 
+     hideOnWindowDeactivate: !Plasmoid.configuration.pin
+@@ -201,6 +282,96 @@
          }
      }
  
 +    SelectionWatcher {
 +        id: selectionWatcher
 +        interval: 500
++        kWinMouseClearingSuspended: root.expanded
 +    }
 +
 +    Translator {
@@ -94,7 +145,10 @@
 +            return;
 +        }
 +
-+        const query = selectionWatcher.text ?? root.dictEntry.query ?? root.dictEntry.matchedWord ?? "";
++        const watcherText = selectionWatcher.text ?? "";
++        const query = watcherText.length > 0
++            ? watcherText
++            : (root.dictEntry.query ?? root.dictEntry.matchedWord ?? "");
 +        if (query.length === 0) {
 +            return;
 +        }
@@ -115,6 +169,9 @@
 +    Connections {
 +        target: selectionWatcher
 +        function onTextChanged() {
++            if (root.expanded) {
++                return;
++            }
 +            root.updateDictEntry();
 +        }
 +    }
@@ -147,16 +204,20 @@
 +    onExpandedChanged: {
 +        if (!expanded) {
 +            root.clearSentenceTranslation();
++            selectionWatcher.clearCurrentSelection();
 +        }
 +    }
 +
      function setDateFormatString() {
          // remove "dddd" from the locale format string
          // /all/ locales in LongFormat have "dddd" either
-@@ -235,5 +358,6 @@
+@@ -235,5 +406,9 @@
          ClipboardMenu.setupMenu(clipboardAction);
  
          initTimeZones();
++        if (Plasmoid.configuration.startKWinMouseHelper) {
++            selectionWatcher.startKWinMouseHelper();
++        }
 +        updateDictEntry();
      }
  }

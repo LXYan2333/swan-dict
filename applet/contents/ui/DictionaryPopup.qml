@@ -17,6 +17,8 @@ import com.github.LXYan2333.SwanDict
 Item {
     id: rootItem
 
+    readonly property string swanDictTranslationDomain: "plasma_applet_com.github.LXYan2333.swan-dict"
+
     property var dictEntry: ({})
     property string sentenceTranslation: ""
     property bool sentenceTranslationBusy: false
@@ -30,6 +32,62 @@ Item {
         id: clipboardWriter
     }
 
+    function escapeHtml(value): string {
+        return `${value ?? ""}`
+            .replace(/&/g, "&amp;")
+            .replace(/</g, "&lt;")
+            .replace(/>/g, "&gt;")
+            .replace(/"/g, "&quot;")
+            .replace(/'/g, "&#39;");
+    }
+
+    function htmlParagraphs(text): string {
+        return `${text ?? ""}`
+            .split(/\n+/)
+            .filter(value => value.length > 0)
+            .map(value => `<p>${rootItem.escapeHtml(value)}</p>`)
+            .join("");
+    }
+
+    function rowsHtml(rows): string {
+        if (rows === undefined || rows.length === 0) {
+            return "";
+        }
+
+        const rowHtml = [];
+        for (let i = 0; i < rows.length; i++) {
+            const row = rows[i];
+            if (row.isWarning === true) {
+                rowHtml.push(`<tr><td colspan="2" style="color:#b00020;font-weight:700">${rootItem.escapeHtml(row.text)}</td></tr>`);
+                continue;
+            }
+
+            rowHtml.push("<tr>"
+                + `<td style="vertical-align:top;white-space:nowrap;color:#777;padding-right:0.6em">${rootItem.escapeHtml(row.pos)}</td>`
+                + `<td style="vertical-align:top">${rootItem.escapeHtml(row.text)}</td>`
+                + "</tr>");
+        }
+
+        return `<table style="border-collapse:collapse;margin:0.35em 0">${rowHtml.join("")}</table>`;
+    }
+
+    function exchangeHtml(rows): string {
+        if (rows === undefined || rows.length === 0) {
+            return "";
+        }
+
+        const rowHtml = [];
+        for (let i = 0; i < rows.length; i++) {
+            const row = rows[i];
+            rowHtml.push("<tr>"
+                + `<td style="vertical-align:top;white-space:nowrap;color:#777;padding-right:0.6em">${rootItem.escapeHtml(row.label)}</td>`
+                + `<td style="vertical-align:top">${rootItem.escapeHtml(row.value)}</td>`
+                + "</tr>");
+        }
+
+        return `<table style="border-collapse:collapse;margin:0.55em 0 0">${rowHtml.join("")}</table>`;
+    }
+
     function copyTextForEntry(entry): string {
         const parts = [];
         const word = entry.matchedWord ?? "";
@@ -38,7 +96,7 @@ Item {
             parts.push(word);
         }
         if (phonetic.length > 0) {
-            parts.push(`[${phonetic}]`);
+            parts.push(`/${phonetic}/`);
         }
         if ((entry.translation ?? "").length > 0) {
             parts.push(entry.translation);
@@ -59,8 +117,44 @@ Item {
         return parts.filter(value => value.length > 0).join("\n\n");
     }
 
+    function copyHtmlForEntry(entry): string {
+        const parts = [];
+        const word = entry.matchedWord ?? "";
+        const phonetic = entry.phonetic ?? "";
+        if (word.length > 0) {
+            parts.push(`<h3 style="margin:0 0 0.25em">${rootItem.escapeHtml(word)}</h3>`);
+        }
+        if (phonetic.length > 0) {
+            parts.push(`<p style="margin:0.15em 0 0.55em;color:#777">/${rootItem.escapeHtml(phonetic)}/</p>`);
+        }
+
+        const translationRows = entry.translationRows ?? [];
+        const definitionRows = entry.definitionRows ?? [];
+        if (translationRows.length > 0) {
+            parts.push(rootItem.rowsHtml(translationRows));
+        } else if ((entry.translation ?? "").length > 0) {
+            parts.push(rootItem.htmlParagraphs(entry.translation));
+        }
+
+        if (definitionRows.length > 0) {
+            parts.push(rootItem.rowsHtml(definitionRows));
+        } else if ((entry.definition ?? "").length > 0) {
+            parts.push(rootItem.htmlParagraphs(entry.definition));
+        }
+
+        parts.push(rootItem.exchangeHtml(entry.exchangeRows ?? []));
+        return `<div>${parts.filter(value => value.length > 0).join("")}</div>`;
+    }
+
     function copyEntry(entry) {
-        clipboardWriter.setText(rootItem.copyTextForEntry(entry));
+        clipboardWriter.setRichText(
+            rootItem.copyTextForEntry(entry),
+            rootItem.copyHtmlForEntry(entry)
+        );
+    }
+
+    function tr(message) {
+        return i18nd(swanDictTranslationDomain, message);
     }
 
     component PartOfSpeechRows: ColumnLayout {
@@ -193,7 +287,7 @@ Item {
             QQC2.Button {
                 icon.name: "edit-paste"
                 display: QQC2.AbstractButton.IconOnly
-                QQC2.ToolTip.text: i18n("Copy dictionary entry")
+                QQC2.ToolTip.text: rootItem.tr("Copy dictionary entry")
                 QQC2.ToolTip.visible: hovered
                 QQC2.ToolTip.delay: Kirigami.Units.toolTipDelay
                 onClicked: rootItem.copyEntry(entry)
@@ -203,7 +297,7 @@ Item {
         PlasmaComponents.Label {
             Layout.fillWidth: true
             visible: showHeading && entry.phonetic !== undefined && entry.phonetic.length > 0
-            text: entry.phonetic !== undefined ? `[${entry.phonetic}]` : ""
+            text: entry.phonetic !== undefined ? `/${entry.phonetic}/` : ""
             opacity: 0.7
             textFormat: Text.PlainText
         }
@@ -227,6 +321,10 @@ Item {
         PartOfSpeechRows {
             rows: entry.definitionRows ?? []
             showWarnings: false
+            Layout.topMargin: entry.translationRows !== undefined
+                && entry.translationRows.length > 0
+                ? Kirigami.Units.smallSpacing
+                : 0
         }
 
         ExchangeRows {
@@ -237,10 +335,10 @@ Item {
     readonly property bool hasPopupEntries: dictEntry.popupEntries !== undefined
         && dictEntry.popupEntries.length > 0
 
-    Layout.minimumWidth: Kirigami.Units.gridUnit * 20
+    Layout.minimumWidth: Kirigami.Units.gridUnit * 22
     Layout.minimumHeight: Kirigami.Units.gridUnit * 12
-    Layout.preferredWidth: Kirigami.Units.gridUnit * 28
-    Layout.preferredHeight: Kirigami.Units.gridUnit * 20
+    Layout.preferredWidth: Kirigami.Units.gridUnit * 22
+    Layout.preferredHeight: Kirigami.Units.gridUnit * 18
 
     Kirigami.Theme.colorSet: Kirigami.Theme.Window
     Kirigami.Theme.inherit: false
@@ -266,7 +364,7 @@ Item {
                 visible: !rootItem.hasPopupEntries
                 icon.name: "edit-paste"
                 display: QQC2.AbstractButton.IconOnly
-                QQC2.ToolTip.text: i18n("Copy dictionary entry")
+                QQC2.ToolTip.text: rootItem.tr("Copy dictionary entry")
                 QQC2.ToolTip.visible: hovered
                 QQC2.ToolTip.delay: Kirigami.Units.toolTipDelay
                 onClicked: rootItem.copyEntry(rootItem.dictEntry)
@@ -276,7 +374,7 @@ Item {
         PlasmaComponents.Label {
             Layout.fillWidth: true
             visible: rootItem.dictEntry.phonetic !== undefined && rootItem.dictEntry.phonetic.length > 0
-            text: rootItem.dictEntry.phonetic !== undefined ? `[${rootItem.dictEntry.phonetic}]` : ""
+            text: rootItem.dictEntry.phonetic !== undefined ? `/${rootItem.dictEntry.phonetic}/` : ""
             opacity: 0.7
             textFormat: Text.PlainText
         }
@@ -308,26 +406,40 @@ Item {
                         enabled: !rootItem.sentenceTranslationBusy
                         text: rootItem.sentenceTranslation.length > 0
                             || rootItem.sentenceTranslationError.length > 0
-                            ? i18n("Translate again with DeepSeek")
-                            : i18n("Translate with DeepSeek")
+                            ? rootItem.tr("Translate again with DeepSeek")
+                            : rootItem.tr("Translate with DeepSeek")
                         onClicked: rootItem.requestSentenceTranslation()
                     }
 
                     PlasmaComponents.Label {
                         Layout.fillWidth: true
                         visible: rootItem.sentenceTranslationBusy
-                        text: i18n("Translating selected text...")
+                        text: rootItem.tr("Translating selected text...")
                         opacity: 0.7
                         textFormat: Text.PlainText
                     }
 
-                    PlasmaComponents.Label {
+                    RowLayout {
                         Layout.fillWidth: true
                         visible: !rootItem.sentenceTranslationBusy
                             && rootItem.sentenceTranslation.length > 0
-                        text: rootItem.sentenceTranslation
-                        wrapMode: Text.WordWrap
-                        textFormat: Text.PlainText
+
+                        QQC2.Button {
+                            Layout.alignment: Qt.AlignTop
+                            icon.name: "edit-paste"
+                            display: QQC2.AbstractButton.IconOnly
+                            QQC2.ToolTip.text: rootItem.tr("Copy DeepSeek translation")
+                            QQC2.ToolTip.visible: hovered
+                            QQC2.ToolTip.delay: Kirigami.Units.toolTipDelay
+                            onClicked: clipboardWriter.setText(rootItem.sentenceTranslation)
+                        }
+
+                        PlasmaComponents.Label {
+                            Layout.fillWidth: true
+                            text: rootItem.sentenceTranslation
+                            wrapMode: Text.WordWrap
+                            textFormat: Text.PlainText
+                        }
                     }
 
                     PlasmaComponents.Label {

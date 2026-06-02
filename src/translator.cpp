@@ -130,7 +130,7 @@ QVariantMap Translator::lookup(const QString &selectedText)
 
 void Translator::translateSentenceWithDeepSeek(const QString &selectedText, const QString &apiKey)
 {
-    const QString text = normalizeQuery(selectedText);
+    const QString text = normalizeSentenceQuery(selectedText);
     const QString trimmedApiKey = apiKey.trimmed();
     if (text.isEmpty() || trimmedApiKey.isEmpty()) {
         Q_EMIT sentenceTranslationFailed(text, i18n("DeepSeek API key is empty."));
@@ -145,8 +145,11 @@ void Translator::translateSentenceWithDeepSeek(const QString &selectedText, cons
     request.setRawHeader("Authorization", QStringLiteral("Bearer %1").arg(trimmedApiKey).toUtf8());
 
     const QJsonObject payload {
-        {QStringLiteral("model"), QStringLiteral("deepseek-chat")},
-        {QStringLiteral("temperature"), 0.2},
+        {QStringLiteral("model"), QStringLiteral("deepseek-v4-flash")},
+        {QStringLiteral("stream"), false},
+        {QStringLiteral("thinking"), QJsonObject {
+             {QStringLiteral("type"), QStringLiteral("disabled")},
+         }},
         {QStringLiteral("messages"), QJsonArray {
              QJsonObject {
                  {QStringLiteral("role"), QStringLiteral("system")},
@@ -247,6 +250,17 @@ QString Translator::normalizeQuery(QString text) const
     }
 
     return strippedWord(text);
+}
+
+QString Translator::normalizeSentenceQuery(QString text) const
+{
+    text = text.trimmed();
+    if (text.isEmpty()) {
+        return QString();
+    }
+
+    static const QRegularExpression whitespace(QStringLiteral("\\s+"));
+    return text.replace(whitespace, QStringLiteral(" "));
 }
 
 QString Translator::strippedWord(QString text) const
@@ -391,16 +405,19 @@ QVariantMap Translator::buildSplitEntry(const QString &query, const QList<QVaria
             summary = entry.value(QStringLiteral("summary")).toString();
         }
 
-        if (!summary.isEmpty()) {
-            summaryParts << summary;
+        const QString dateSummary = cleanDateReplacementSummary(summary);
+        if (!dateSummary.isEmpty()) {
+            summaryParts << dateSummary;
         }
 
         if (!translationRows.isEmpty()) {
             bool isFirstRow = true;
+            bool isFirstWord = popupEntries.isEmpty();
             for (const QVariant &rowValue : translationRows) {
                 QVariantMap row = rowValue.toMap();
                 if (isFirstRow) {
                     row.insert(QStringLiteral("word"), word);
+                    row.insert(QStringLiteral("isFirstWord"), isFirstWord);
                     isFirstRow = false;
                 }
                 briefRows.push_back(row);
@@ -408,6 +425,7 @@ QVariantMap Translator::buildSplitEntry(const QString &query, const QList<QVaria
         } else if (!summary.isEmpty()) {
             briefRows.push_back(QVariantMap {
                 {QStringLiteral("word"), word},
+                {QStringLiteral("isFirstWord"), popupEntries.isEmpty()},
                 {QStringLiteral("pos"), QString()},
                 {QStringLiteral("text"), summary},
             });
@@ -493,7 +511,19 @@ QString Translator::compactSummary(const QString &translation, const QString &de
     static const QRegularExpression whitespace(QStringLiteral("\\s+"));
     text = text.replace(whitespace, QStringLiteral(" ")).trimmed();
 
-    return truncateDateReplacement(text);
+    return truncateDateReplacement(cleanDateReplacementSummary(text));
+}
+
+QString Translator::cleanDateReplacementSummary(QString text) const
+{
+    static const QRegularExpression leadingPartOfSpeech(QStringLiteral("^[A-Za-z]+\\.\\s*"));
+    static const QRegularExpression leadingDomainTags(QStringLiteral("^(?:\\[[^\\]]+\\]\\s*)+"));
+    static const QRegularExpression whitespace(QStringLiteral("\\s+"));
+
+    text = text.replace(leadingDomainTags, QString());
+    text = text.replace(leadingPartOfSpeech, QString());
+    text = text.replace(leadingDomainTags, QString());
+    return text.replace(whitespace, QStringLiteral(" ")).trimmed();
 }
 
 QString Translator::truncateDateReplacement(QString text) const
@@ -574,7 +604,7 @@ QString Translator::fullText(const QString &word, const QString &phonetic, const
         parts << word.trimmed();
     }
     if (!phonetic.trimmed().isEmpty()) {
-        parts << QStringLiteral("[%1]").arg(phonetic.trimmed());
+        parts << QStringLiteral("/%1/").arg(phonetic.trimmed());
     }
     const QString normalizedTranslation = normalizeDictionaryText(translation).trimmed();
     if (!normalizedTranslation.isEmpty()) {
@@ -595,8 +625,9 @@ QVariantList Translator::partOfSpeechRows(const QString &text) const
         return rows;
     }
 
-    static const QRegularExpression markerBoundary(QStringLiteral("\\s+(?=[A-Za-z]+\\.\\s)"));
-    static const QRegularExpression rowPattern(QStringLiteral("^([A-Za-z]+\\.)\\s*(.*)$"));
+    static const QString posMarkers = QStringLiteral("(?:n|v|a|s|r|adj|adv|vi|vt|prep|pron|conj|interj|int|num|aux|abbr|art|pl|sing|suf|suff|pref|prefix|comb|phrase|phr|idiom|p|imp|un|na|alt|vbl|pla|st|superl|pp|obs|adjective|pret|dv|pn|vb|exclam|obj|quant|noun|compar|ads|ad|ind|col|ph|ing|verb|fem|imperative|pr|usu|indef|dat)");
+    static const QRegularExpression markerBoundary(QStringLiteral("\\s+(?=(?:%1\\.\\s|\\[[^\\]]+\\]))").arg(posMarkers), QRegularExpression::CaseInsensitiveOption);
+    static const QRegularExpression rowPattern(QStringLiteral("^(%1\\.)\\s*(.*)$").arg(posMarkers), QRegularExpression::CaseInsensitiveOption);
     const QString preparedText = QString(normalizedText).replace(markerBoundary, QStringLiteral("\n"));
     const QStringList lines = preparedText.split(u'\n', Qt::SkipEmptyParts);
     for (QString line : lines) {
@@ -613,6 +644,11 @@ QVariantList Translator::partOfSpeechRows(const QString &text) const
             body = match.captured(2).trimmed();
         }
 
+        const QString domainTags = takeLeadingDomainTags(&body);
+        if (pos.isEmpty()) {
+            pos = domainTags;
+        }
+
         rows.push_back(QVariantMap {
             {QStringLiteral("pos"), pos},
             {QStringLiteral("text"), body},
@@ -620,6 +656,36 @@ QVariantList Translator::partOfSpeechRows(const QString &text) const
     }
 
     return rows;
+}
+
+QString Translator::takeLeadingDomainTags(QString *text) const
+{
+    if (!text) {
+        return QString();
+    }
+
+    QString body = text->trimmed();
+    static const QRegularExpression leadingDomainTags(QStringLiteral("^(?:\\[([^\\]]+)\\]\\s*)+"));
+    static const QRegularExpression domainTag(QStringLiteral("\\[([^\\]]+)\\]"));
+    const QRegularExpressionMatch match = leadingDomainTags.match(body);
+    if (!match.hasMatch()) {
+        *text = body;
+        return QString();
+    }
+
+    QStringList tags;
+    const QString matchedTags = match.captured(0);
+    QRegularExpressionMatchIterator iterator = domainTag.globalMatch(matchedTags);
+    while (iterator.hasNext()) {
+        const QString tag = iterator.next().captured(1).trimmed();
+        if (!tag.isEmpty()) {
+            tags << tag;
+        }
+    }
+
+    body = body.mid(match.capturedEnd()).trimmed();
+    *text = body;
+    return tags.join(QStringLiteral(" "));
 }
 
 QVariantList Translator::exchangeRows(const QString &exchange) const

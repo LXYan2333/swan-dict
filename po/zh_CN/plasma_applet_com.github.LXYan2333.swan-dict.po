@@ -27,8 +27,14 @@ msgstr "使用 DeepSeek 翻译"
 msgid "Translating selected text..."
 msgstr "正在翻译选中文本..."
 
+msgid "Copy DeepSeek translation"
+msgstr "复制 DeepSeek 翻译"
+
 msgid "Dictionary selection limit:"
 msgstr "词典选区限制："
+
+msgid "Maximum selected-text length used for local dictionary lookup. If the selection is longer, Swan Dict translates up to this limit but extends to the end of the current word."
+msgstr "本地词典查询使用的选中文本长度上限。如果选区更长，天鹅词典会翻译到此限制附近，并延伸到当前单词结尾。"
 
 msgid "%1 character"
 msgid_plural "%1 characters"
@@ -37,14 +43,44 @@ msgstr[0] "%1 个字符"
 msgid "Date replacement length:"
 msgstr "日期替换长度："
 
+msgid "Maximum number of characters shown in the panel date area. Longer summaries are truncated with an ellipsis."
+msgstr "面板日期区域最多显示的字符数。更长的摘要会用省略号截断。"
+
+msgid "Date replacement width:"
+msgstr "日期替换宽度："
+
+msgid "Fixed pixel width reserved for the date or translation in the panel. Use Automatic to let the widget size itself like the original Digital Clock."
+msgstr "面板中为日期或翻译预留的固定像素宽度。选择自动时，小组件会像原版数字时钟一样自行决定宽度。"
+
+msgid "Automatic"
+msgstr "自动"
+
+msgid "%1 px"
+msgstr "%1 像素"
+
+msgid "KWin mouse helper:"
+msgstr "KWin 鼠标辅助："
+
+msgid "Start the optional KWin helper when this widget starts"
+msgstr "小组件启动时加载可选 KWin 辅助"
+
+msgid "The helper lets the widget notice mouse clicks outside itself on Wayland, so stale selected-text translations can return to the normal date sooner. The widget still works without it."
+msgstr "该辅助能让小组件在 Wayland 下感知外部鼠标点击，从而更快把过期选区翻译恢复为普通日期。没有它小组件也能工作。"
+
 msgid "Sentence translation:"
 msgstr "句子翻译："
 
 msgid "Use DeepSeek when opening the popup for multi-word selections"
 msgstr "打开多词选区弹窗时允许使用 DeepSeek"
 
+msgid "Allows manual AI translation for multi-word selections in the click popup. It is not triggered on hover or automatically when the popup opens."
+msgstr "允许在点击弹窗中手动对多词选区进行 AI 翻译。悬停时不会触发，弹窗打开时也不会自动触发。"
+
 msgid "DeepSeek API key:"
 msgstr "DeepSeek API 密钥："
+
+msgid "API key used only when you press the DeepSeek translation button. It is stored in the widget configuration, not in KWallet."
+msgstr "仅在按下 DeepSeek 翻译按钮时使用的 API 密钥。它存储在小组件配置中，不存储在 KWallet 中。"
 
 msgid "sk-..."
 msgstr "sk-..."

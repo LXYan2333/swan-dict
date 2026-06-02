@@ -1,0 +1,15 @@
+{
+    "KPlugin": {
+        "Authors": [
+            {
+                "Name": "LXYan"
+            }
+        ],
+        "Category": "Tools",
+        "Description": "Optional helper effect that reports global mouse clicks to Swan Dict.",
+        "EnabledByDefault": false,
+        "License": "GPL-2.0-or-later",
+        "Name": "Swan Dict Mouse Helper"
+    },
+    "X-KDE-Ordering": 99
+}

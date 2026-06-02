@@ -38,12 +38,15 @@ Common requirements:
 
 - CMake
 - Ninja or Make
+- pkg-config / pkgconf
 - C++17 compiler
 - Python 3
 - Extra CMake Modules
 - Qt 6 Core, Gui, Network, Qml, Sql
 - KF6 I18n
 - KF6 Package
+- Wayland client development files
+- wayland-protocols
 - Plasma Workspace package that owns
   `/usr/share/plasma/plasmoids/org.kde.plasma.digitalclock`
 
@@ -51,7 +54,6 @@ Runtime requirements:
 
 - Plasma 6
 - Qt 6 SQLite plugin
-- `wl-clipboard` for Wayland primary-selection reads
 
 ## CMake
 
@@ -84,12 +86,16 @@ Debian/Ubuntu build dependencies:
 - `cmake`
 - `extra-cmake-modules`
 - `ninja-build`
+- `pkgconf`
 - `python3`
 - `qt6-base-dev`
 - `qt6-declarative-dev`
 - `libkf6i18n-dev`
 - `libkf6package-dev`
 - `plasma-workspace`
+- `kwin-dev`
+- `libwayland-dev`
+- `wayland-protocols`
 
 Debian/Ubuntu runtime dependencies:
 
@@ -98,19 +104,22 @@ Debian/Ubuntu runtime dependencies:
 - `qml6-module-qtquick-controls`
 - `qml6-module-qtquick-layouts`
 - `libqt6sql6-sqlite`
-- `wl-clipboard`
 
 Fedora build dependencies:
 
 - `cmake`
 - `extra-cmake-modules`
 - `ninja-build`
+- `pkgconf-pkg-config`
 - `python3`
 - `qt6-qtbase-devel`
 - `qt6-qtdeclarative-devel`
 - `kf6-ki18n-devel`
 - `kf6-kpackage-devel`
 - `plasma-workspace`
+- KWin development package, distro name varies
+- `wayland-devel`
+- `wayland-protocols-devel`
 
 Fedora runtime dependencies:
 
@@ -118,26 +127,27 @@ Fedora runtime dependencies:
 - `qt6-qtbase`
 - `qt6-qtdeclarative`
 - `qt6-qtbase-sqlite`
-- `wl-clipboard`
 
 Arch build dependencies:
 
 - `cmake`
 - `extra-cmake-modules`
 - `ninja`
+- `pkgconf`
 - `python`
 - `qt6-base`
 - `qt6-declarative`
 - `ki18n`
 - `kpackage`
 - `plasma-workspace`
+- `wayland`
+- `wayland-protocols`
 
 Arch runtime dependencies:
 
 - `plasma-workspace`
 - `qt6-base`
 - `qt6-declarative`
-- `wl-clipboard`
 
 ## OBS Workflow
 

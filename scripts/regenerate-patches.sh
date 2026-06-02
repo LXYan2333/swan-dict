@@ -31,6 +31,11 @@ files=(
     "main.qml:0003-main-qml-swan-dict-wiring.patch"
     "../config/config.qml:0004-config-qml-translation-page.patch"
     "../config/main.xml:0005-main-xml-translation-settings.patch"
+    "configAppearance.qml:0006-config-appearance-digital-clock-i18n.patch"
+    "configCalendar.qml:0007-config-calendar-digital-clock-i18n.patch"
+    "configTimeZones.qml:0008-config-time-zones-digital-clock-i18n.patch"
+    "CalendarView.qml:0009-calendar-view-digital-clock-i18n.patch"
+    "NoTimezoneWarning.qml:0010-no-timezone-warning-digital-clock-i18n.patch"
 )
 
 for entry in "${files[@]}"; do
@@ -39,7 +44,11 @@ for entry in "${files[@]}"; do
     upstream_file="${upstream}/ui/${relative_name}"
     current_file="${current}/ui/${relative_name}"
     patch_file="${patch_dir}/${patch_name}"
-    normalized_name="${relative_name#../}"
+    if [[ "${relative_name}" == ../* ]]; then
+        normalized_name="${relative_name#../}"
+    else
+        normalized_name="ui/${relative_name}"
+    fi
 
     if [[ ! -f "${upstream_file}" ]]; then
         echo "Upstream file not found: ${upstream_file}" >&2
@@ -54,13 +63,28 @@ for entry in "${files[@]}"; do
     cp "${current_file}" "${tmp_dir}/current/contents/${normalized_name}"
 
     if diff -q "${tmp_dir}/upstream/contents/${normalized_name}" "${tmp_dir}/current/contents/${normalized_name}" >/dev/null; then
-        rm -f "${patch_file}"
-        echo "unchanged: ${normalized_name}"
+        if [[ -f "${patch_file}" ]]; then
+            rm -f "${patch_file}"
+            echo "removed: ${patch_file}"
+        else
+            echo "unchanged: ${normalized_name}"
+        fi
     else
+        generated_patch="${tmp_dir}/${patch_name}"
         (
             cd "${tmp_dir}"
-            diff -u "upstream/contents/${normalized_name}" "current/contents/${normalized_name}" > "${patch_file}" || true
+            diff -u \
+                --label "upstream/contents/${normalized_name}" \
+                --label "current/contents/${normalized_name}" \
+                "upstream/contents/${normalized_name}" \
+                "current/contents/${normalized_name}" > "${generated_patch}" || true
         )
-        echo "updated: ${patch_file}"
+
+        if [[ -f "${patch_file}" ]] && cmp -s "${generated_patch}" "${patch_file}"; then
+            echo "unchanged: ${patch_file}"
+        else
+            cp "${generated_patch}" "${patch_file}"
+            echo "updated: ${patch_file}"
+        fi
     fi
 done

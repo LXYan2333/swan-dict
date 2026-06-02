@@ -1,12 +1,13 @@
 cmake_minimum_required(VERSION 3.20)
 
-project(swan-dict VERSION 0.1 LANGUAGES CXX)
+project(swan-dict VERSION 0.1 LANGUAGES C CXX)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_AUTOMOC ON)
 
 option(SWAN_DICT_GENERATE_DICTIONARY "Generate the bundled ECDICT SQLite database during the build" ON)
+option(SWAN_DICT_BUILD_KWIN_HELPER "Build the optional KWin effect helper for global mouse click detection" ON)
 
 find_package(ECM REQUIRED NO_MODULE)
 set(CMAKE_MODULE_PATH ${ECM_MODULE_PATH})
@@ -16,12 +17,14 @@ include(KDEInstallDirs)
 if (SWAN_DICT_GENERATE_DICTIONARY)
     find_package(Python3 REQUIRED COMPONENTS Interpreter)
 endif()
-find_package(Qt6 REQUIRED COMPONENTS Core Gui Network Qml Sql)
+find_package(Qt6 REQUIRED COMPONENTS Core DBus Gui Network Qml Sql)
 if (COMMAND qt_policy)
     qt_policy(SET QTP0001 NEW)
 endif()
 find_package(KF6 REQUIRED COMPONENTS I18n Package)
+find_package(Plasma REQUIRED)
 include(${KF6Package_DIR}/KF6PackageMacros.cmake)
+include(${Plasma_DIR}/PlasmaMacros.cmake)
 
 execute_process(
     COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/scripts/sync-digital-clock.sh
@@ -33,6 +36,9 @@ if (NOT sync_digital_clock_result EQUAL 0)
 endif()
 
 add_subdirectory(src)
+if (SWAN_DICT_BUILD_KWIN_HELPER)
+    add_subdirectory(kwin-helper)
+endif()
 ki18n_install(po)
 
 if (SWAN_DICT_GENERATE_DICTIONARY)
@@ -58,4 +64,4 @@ if (SWAN_DICT_GENERATE_DICTIONARY)
     add_custom_target(swandict_dictionary ALL DEPENDS ${SWAN_DICT_ECDICT_DB})
 endif()
 
-kpackage_install_package(applet com.github.LXYan2333.swan-dict plasmoids)
+plasma_install_package(applet com.github.LXYan2333.swan-dict)

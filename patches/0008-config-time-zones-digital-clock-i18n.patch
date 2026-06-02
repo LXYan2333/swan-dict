@@ -1,0 +1,32 @@
+--- upstream/contents/ui/configTimeZones.qml
++++ current/contents/ui/configTimeZones.qml
+@@ -18,6 +18,29 @@
+ KCMUtils.ScrollViewKCM {
+     id: timeZonesPage
+ 
++    readonly property string upstreamTranslationDomain: "plasma_applet_org.kde.plasma.digitalclock"
++    function i18n(message, arg1, arg2, arg3) {
++        if (arguments.length === 4) {
++            return i18nd(upstreamTranslationDomain, message, arg1, arg2, arg3);
++        }
++        if (arguments.length === 3) {
++            return i18nd(upstreamTranslationDomain, message, arg1, arg2);
++        }
++        if (arguments.length === 2) {
++            return i18nd(upstreamTranslationDomain, message, arg1);
++        }
++        return i18nd(upstreamTranslationDomain, message);
++    }
++    function i18nc(context, message, arg1, arg2) {
++        if (arguments.length === 4) {
++            return i18ndc(upstreamTranslationDomain, context, message, arg1, arg2);
++        }
++        if (arguments.length === 3) {
++            return i18ndc(upstreamTranslationDomain, context, message, arg1);
++        }
++        return i18ndc(upstreamTranslationDomain, context, message);
++    }
++
+     property string cfg_lastSelectedTimezone
+     property alias cfg_selectedTimeZones: timeZones.selectedTimeZones
+     property alias cfg_wheelChangesTimezone: enableWheelCheckBox.checked

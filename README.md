@@ -23,7 +23,7 @@ https://github.com/program-in-chinese/vscode_english_chinese_dictionary
 ## 功能
 
 - 支持 KDE Plasma 6。
-- Wayland 下通过 `wl-paste --primary` 读取 primary selection。
+- Wayland 下通过内置 Wayland primary-selection client 读取 primary selection。
 - X11 下通过 `QClipboard::Selection` 读取 primary selection。
 - 使用本地 SQLite 词典，不依赖网络完成单词翻译。
 - 支持 DeepSeek 手动整句翻译。
@@ -36,27 +36,30 @@ https://github.com/program-in-chinese/vscode_english_chinese_dictionary
 
 - CMake
 - Extra CMake Modules
+- pkg-config / pkgconf
 - C++17 编译器
 - Python 3
 - Qt 6 Core / Gui / Network / Qml / Sql
 - KF6 I18n
 - KF6 Package
 - Plasma Workspace
+- Wayland client 开发文件和 wayland-protocols
+- KWin 开发文件，用于构建可选鼠标点击辅助 effect
 
 运行依赖：
 
 - Plasma 6
 - Qt 6 SQLite 插件
-- Wayland 下需要 `wl-clipboard`
+- 可选：KWin 鼠标点击辅助 effect，用于在用户点击其它位置后更快清空过期选区翻译
 
 Debian 13 上可参考：
 
 ```console
 sudo apt --mark-auto install \
-  cmake extra-cmake-modules ninja-build python3 \
-  qt6-base-dev qt6-declarative-dev \
+  cmake extra-cmake-modules ninja-build pkgconf python3 \
+  qt6-base-dev qt6-declarative-dev qt6-tools-dev-tools \
   libkf6i18n-dev libkf6package-dev \
-  plasma-workspace wl-clipboard
+  plasma-workspace kwin-dev libwayland-dev wayland-protocols
 ```
 
 ## 初始化源码
@@ -112,6 +115,34 @@ QML_IMPORT_PATH=build/src plasmoidviewer -a applet
 
 ```console
 cmake --build build
+```
+
+## 可选 KWin 鼠标点击辅助（默认开启）
+
+Wayland 下 primary selection 的提供方有时不会在“视觉上取消选中”时清空 selection。
+因此仅靠 primary-selection 协议有时可能会读到上一次选中的文本。
+
+本项目提供一个可选 KWin effect helper：
+
+```text
+kwin-helper/
+```
+
+它在 KWin 内部监听全局鼠标按下事件，并通过 session D-Bus 发送信号给小组件。
+小组件如果收不到该信号，会继续使用内置 primary-selection 读取逻辑，不影响运行。
+
+构建辅助 effect （默认开启）：
+
+```console
+cmake -B build -S . -DSWAN_DICT_BUILD_KWIN_HELPER=ON
+cmake --build build
+sudo cmake --install build
+```
+
+安装后，将在词典启动时自动启动（可配置不自动启动），也可以通过 KWin D-Bus 加载 effect：
+
+```console
+qdbus6 org.kde.KWin /Effects loadEffect swandictmousehelper
 ```
 
 ## 安装
@@ -200,6 +231,7 @@ applet/contents/ui/configTranslation.qml
 
 - Dictionary selection limit：本地词典处理选区的长度上限，默认 `128`。
 - Date replacement length：紧凑视图日期替换文本长度，默认 `10`。
+- KWin mouse helper：启动小组件时尝试加载可选 KWin 鼠标点击辅助 effect，默认开启。
 - Sentence translation：是否允许 DeepSeek 整句翻译。
 - DeepSeek API key：DeepSeek API key。
 

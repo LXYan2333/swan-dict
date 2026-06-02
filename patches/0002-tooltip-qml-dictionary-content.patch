@@ -1,14 +1,42 @@
---- upstream/contents/Tooltip.qml	2026-06-02 02:55:55.952627713 +0800
-+++ current/contents/Tooltip.qml	2026-06-02 02:55:55.952627713 +0800
-@@ -17,7 +17,6 @@
+--- upstream/contents/ui/Tooltip.qml
++++ current/contents/ui/Tooltip.qml
+@@ -16,10 +16,32 @@
+ Item {
      id: toolTipContentItem
  
-     property int preferredTextWidth: Kirigami.Units.gridUnit * 20
--
-     implicitWidth: mainLayout.implicitWidth + Kirigami.Units.gridUnit
-     implicitHeight: mainLayout.implicitHeight + Kirigami.Units.gridUnit
+-    property int preferredTextWidth: Kirigami.Units.gridUnit * 20
++    readonly property string upstreamTranslationDomain: "plasma_applet_org.kde.plasma.digitalclock"
++    function i18n(message, arg1, arg2) {
++        if (arguments.length === 3) {
++            return i18nd(upstreamTranslationDomain, message, arg1, arg2);
++        }
++        if (arguments.length === 2) {
++            return i18nd(upstreamTranslationDomain, message, arg1);
++        }
++        return i18nd(upstreamTranslationDomain, message);
++    }
++    function i18nc(context, message, arg1, arg2) {
++        if (arguments.length === 4) {
++            return i18ndc(upstreamTranslationDomain, context, message, arg1, arg2);
++        }
++        if (arguments.length === 3) {
++            return i18ndc(upstreamTranslationDomain, context, message, arg1);
++        }
++        return i18ndc(upstreamTranslationDomain, context, message);
++    }
  
-@@ -31,8 +30,11 @@
+-    implicitWidth: mainLayout.implicitWidth + Kirigami.Units.gridUnit
+-    implicitHeight: mainLayout.implicitHeight + Kirigami.Units.gridUnit
++    property int preferredTextWidth: Kirigami.Units.gridUnit * 20
++    property int dictionaryTooltipWidth: Kirigami.Units.gridUnit * 22
++    property int dictionaryTooltipHeight: Kirigami.Units.gridUnit * 18
++    implicitWidth: root.hasDictEntry ? dictionaryTooltipWidth : mainLayout.implicitWidth + Kirigami.Units.gridUnit
++    implicitHeight: root.hasDictEntry ? dictionaryTooltipHeight : mainLayout.implicitHeight + Kirigami.Units.gridUnit
++    clip: root.hasDictEntry
+ 
+     LayoutMirroring.enabled: Qt.application.layoutDirection === Qt.RightToLeft
+     LayoutMirroring.childrenInherit: true
+@@ -31,8 +53,11 @@
       * These accessible properties are used in the compact representation,
       * not here.
       */
@@ -21,7 +49,7 @@
          const description = tooltipSubLabelText.visible ? [tooltipSubLabelText.text] : [];
          for (let i = 0; i < timeZoneRepeater.count; i += 2) {
              description.push(`${timeZoneRepeater.itemAt(i).text}: ${timeZoneRepeater.itemAt(i + 1).text}`);
-@@ -52,6 +54,190 @@
+@@ -52,6 +77,209 @@
          spacing: 0
  
          Kirigami.Heading {
@@ -41,9 +69,11 @@
 +            maximumLineCount: 16
 +            wrapMode: Text.Wrap
 +
-+            text: root.hasDictEntry ? [root.dictEntry.phonetic]
-+                .filter(value => value !== undefined && value.length > 0)
-+                .join("\n\n") : ""
++            text: root.hasDictEntry
++                && root.dictEntry.phonetic !== undefined
++                && root.dictEntry.phonetic.length > 0
++                ? `/${root.dictEntry.phonetic}/`
++                : ""
 +            textFormat: Text.PlainText
 +            visible: root.hasDictEntry && text.length > 0
 +        }
@@ -69,9 +99,21 @@
 +                        Layout.fillWidth: true
 +                        spacing: Kirigami.Units.smallSpacing
 +
-+                        PlasmaComponents.Label {
++                        Rectangle {
++                            Layout.fillWidth: true
++                            Layout.preferredHeight: 1
++                            Layout.topMargin: Kirigami.Units.smallSpacing
++                            visible: modelData.word !== undefined
++                                && modelData.word.length > 0
++                                && modelData.isFirstWord !== true
++                            color: Kirigami.Theme.disabledTextColor
++                            opacity: 0.35
++                        }
++
++                        Kirigami.Heading {
 +                            Layout.fillWidth: true
 +                            visible: modelData.word !== undefined && modelData.word.length > 0
++                            level: 4
 +                            text: modelData.word ?? ""
 +                            elide: Text.ElideRight
 +                            textFormat: Text.PlainText
@@ -121,6 +163,11 @@
 +        ColumnLayout {
 +            Layout.minimumWidth: Math.min(implicitWidth, toolTipContentItem.preferredTextWidth)
 +            Layout.maximumWidth: toolTipContentItem.preferredTextWidth
++            Layout.topMargin: root.hasDictEntry
++                && root.dictEntry.translationRows !== undefined
++                && root.dictEntry.translationRows.length > 0
++                ? Kirigami.Units.smallSpacing
++                : 0
 +            spacing: Kirigami.Units.smallSpacing
 +            visible: root.hasDictEntry
 +                && root.dictEntry.definitionRows !== undefined
@@ -212,7 +259,7 @@
              id: tooltipMaintext
  
              Layout.minimumWidth: Math.min(implicitWidth, toolTipContentItem.preferredTextWidth)
-@@ -64,6 +250,7 @@
+@@ -64,6 +292,7 @@
              property bool anyTimezoneSet: !!mainText
              text: anyTimezoneSet ? mainText : i18nc("@label main text shown in digital clock's tooltip when timezone is missing", "Time zone is not set")
              textFormat: Text.PlainText
@@ -220,7 +267,7 @@
          }
  
          PlasmaComponents.Label {
-@@ -85,7 +272,7 @@
+@@ -85,7 +314,7 @@
              }
              text: tooltipMaintext.anyTimezoneSet ? subText : i18nc("@label sub text shown in digital clock's tooltip when timezone is missing", "Click the clock icon to open Date & Time settings and set a time zone.")
              opacity: 0.6
@@ -229,7 +276,7 @@
              font.features: { "tnum": 1 }
          }
  
-@@ -96,7 +283,7 @@
+@@ -96,7 +325,7 @@
              text: (root.fullRepresentationItem as CalendarView)?.monthView.todayAuxilliaryText ?? ""
              textFormat: Text.PlainText
              opacity: 0.6
@@ -238,7 +285,7 @@
          }
  
          GridLayout {
-@@ -105,7 +292,7 @@
+@@ -105,7 +334,7 @@
              Layout.minimumWidth: Math.min(implicitWidth, toolTipContentItem.preferredTextWidth)
              Layout.maximumWidth: toolTipContentItem.preferredTextWidth
              Layout.minimumHeight: childrenRect.height
