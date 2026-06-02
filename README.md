@@ -12,7 +12,7 @@ Swan Dict 是一个 KDE Plasma 6 小组件，基于系统自带的 Digital Clock
 
 将鼠标悬停在小组件上方或点击小组件可以获得更详尽的翻译。
 
-<video src="assets/2026-06-02 20-33-25.mov" width="320" height="240" controls></video>
+https://github.com/user-attachments/assets/03ee851b-52c1-4550-bb38-dbdf94e013e0
 
 它会读取当前 primary selection：
 
