@@ -1,0 +1,100 @@
+--- upstream/contents/ui/DigitalClock.qml
++++ current/contents/ui/DigitalClock.qml
+@@ -25,6 +25,8 @@
+ 
+     property string timeFormat
+     property string timeFormatWithSeconds
++    readonly property int fixedDateWidth: Math.max(0, Plasmoid.configuration.dateReplacementFixedWidth)
++    readonly property int effectiveDateWidth: fixedDateWidth > 0 ? fixedDateWidth : dateLabel.paintedWidth
+ 
+     // This is quite convoluted in Qt 6:
+     // Qt.formatDate with locale only accepts Locale.FormatType as format type,
+@@ -97,6 +99,13 @@
+     }
+ 
+     Connections {
++        target: root
++        function onDictEntryChanged() {
++            main.setupLabels();
++        }
++    }
++
++    Connections {
+         target: Plasmoid.configuration
+         function onSelectedTimeZonesChanged() {
+             // If the currently selected time zone was removed,
+@@ -148,7 +157,7 @@
+ 
+                 contentItem.height: timeLabel.height + (contentItem.Plasmoid.configuration.showDate || timeZoneLabel.visible ? 0.8 * timeLabel.height : 0)
+                 contentItem.width: Math.max(timeLabel.width + (contentItem.Plasmoid.configuration.showDate ? timeZoneLabel.paintedWidth : 0),
+-                                timeZoneLabel.paintedWidth, dateLabel.paintedWidth) + Kirigami.Units.largeSpacing
++                                timeZoneLabel.paintedWidth, dateLabel.width) + Kirigami.Units.largeSpacing
+ 
+                 labelsGrid.rows: labelsGrid.Plasmoid.configuration.showDate ? 1 : 2
+ 
+@@ -161,7 +170,7 @@
+                 timeZoneLabel.font.pixelSize: timeZoneLabel.height
+ 
+                 dateLabel.height: 0.8 * timeLabel.height
+-                dateLabel.width: dateLabel.paintedWidth
++                dateLabel.width: main.effectiveDateWidth
+                 dateLabel.verticalAlignment: Text.AlignVCenter
+                 dateLabel.font.pixelSize: dateLabel.height
+ 
+@@ -207,7 +216,7 @@
+                 contentItem.width: (dateLabel.visible ? dateLabel.width + dateLabel.anchors.rightMargin : 0) + labelsGrid.width
+ 
+                 dateLabel.height: timeLabel.height
+-                dateLabel.width: dateLabel.paintedWidth
++                dateLabel.width: main.effectiveDateWidth
+ 
+                 dateLabel.font.pixelSize: 1024
+                 dateLabel.verticalAlignment: Text.AlignVCenter
+@@ -279,7 +288,7 @@
+                 // between slightly bigger than the default font (1.4 times) and a bit smaller than the time font
+                 dateLabel.font.pixelSize: Math.min(0.7 * timeLabel.height, contentItem.Kirigami.Theme.defaultFont.pixelSize * 1.4)
+                 dateLabel.elide: Text.ElideRight
+-                dateLabel.wrapMode: Text.WordWrap
++                dateLabel.wrapMode: root.hasDictEntry ? Text.NoWrap : Text.WordWrap
+ 
+                 sizehelper.width: main.width
+                 sizehelper.fontSizeMode: Text.HorizontalFit
+@@ -324,7 +333,7 @@
+                 dateLabel.verticalAlignment: Text.AlignVCenter
+                 dateLabel.fontSizeMode: Text.Fit
+                 dateLabel.minimumPixelSize: 1
+-                dateLabel.wrapMode: Text.WordWrap
++                dateLabel.wrapMode: root.hasDictEntry ? Text.NoWrap : Text.WordWrap
+ 
+                 sizehelper.height: {
+                     if (sizehelper.Plasmoid?.configuration.showDate) {
+@@ -351,7 +360,10 @@
+         }
+     ]
+ 
+-    onPressed: wasExpanded = root.expanded
++    onPressed: {
++        root.ignoreNextKWinMouseClick(500);
++        wasExpanded = root.expanded;
++    }
+     onClicked: root.expanded = !wasExpanded
+     onWheel: wheel => {
+         if (!Plasmoid.configuration.wheelChangesTimezone) {
+@@ -452,6 +464,8 @@
+             horizontalAlignment: Text.AlignHCenter
+             verticalAlignment: Text.AlignVCenter
+             textFormat: Text.PlainText
++            elide: Text.ElideRight
++            wrapMode: Text.NoWrap
+         }
+     }
+     /*
+@@ -558,7 +572,7 @@
+         timeZoneLabel.text = timezoneString;
+ 
+         if (Plasmoid.configuration.showDate) {
+-            dateLabel.text = main.dateFormatter(clock.dateTime);
++            dateLabel.text = root.hasDictEntry ? root.dictEntry.summary : main.dateFormatter(clock.dateTime);
+         } else {
+             // clear it so it doesn't take space in the layout
+             dateLabel.text = "";

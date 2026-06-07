@@ -74,7 +74,7 @@
  
 -    onPressed: wasExpanded = root.expanded
 +    onPressed: {
-+        selectionWatcher.ignoreNextKWinMouseClick(500);
++        root.ignoreNextKWinMouseClick(500);
 +        wasExpanded = root.expanded;
 +    }
      onClicked: root.expanded = !wasExpanded

@@ -4,7 +4,7 @@ set -euo pipefail
 repo_root="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)"
 upstream="${SWAN_DICT_DIGITAL_CLOCK_SOURCE:-/usr/share/plasma/plasmoids/org.kde.plasma.digitalclock/contents}"
 current="${repo_root}/applet/contents"
-patch_dir="${repo_root}/patches"
+patch_dir="${SWAN_DICT_DIGITAL_CLOCK_PATCH_DIR:-${repo_root}/patches}"
 tmp_dir="$(mktemp -d)"
 
 cleanup() {
@@ -20,6 +20,14 @@ fi
 if [[ ! -d "${current}" ]]; then
     echo "Current applet contents not found: ${current}" >&2
     exit 1
+fi
+
+if [[ -d "${upstream}/ui" ]]; then
+    upstream_ui="${upstream}/ui"
+    upstream_config="${upstream}/config"
+else
+    upstream_ui="${upstream}"
+    upstream_config="${upstream}"
 fi
 
 mkdir -p "${tmp_dir}/upstream/contents/config" "${tmp_dir}/upstream/contents/ui"
@@ -41,13 +49,14 @@ files=(
 for entry in "${files[@]}"; do
     relative_name="${entry%%:*}"
     patch_name="${entry#*:}"
-    upstream_file="${upstream}/ui/${relative_name}"
     current_file="${current}/ui/${relative_name}"
     patch_file="${patch_dir}/${patch_name}"
     if [[ "${relative_name}" == ../* ]]; then
         normalized_name="${relative_name#../}"
+        upstream_file="${upstream_config}/${normalized_name#config/}"
     else
         normalized_name="ui/${relative_name}"
+        upstream_file="${upstream_ui}/${relative_name}"
     fi
 
     if [[ ! -f "${upstream_file}" ]]; then

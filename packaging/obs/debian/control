@@ -1,0 +1,44 @@
+Source: swan-dict
+Section: kde
+Priority: optional
+Maintainer: LXYan <z00823823@outlook.com>
+Build-Depends:
+ debhelper-compat (= 13),
+ cmake,
+ extra-cmake-modules,
+ ninja-build,
+ pkgconf,
+ python3,
+ qt6-base-dev,
+ qt6-declarative-dev,
+ libkf6config-dev,
+ libkf6coreaddons-dev,
+ libkf6i18n-dev,
+ libkf6package-dev,
+ libkf6windowsystem-dev,
+ libepoxy-dev,
+ libdrm-dev,
+ libplasma-dev,
+ plasma-workspace,
+ kwin-dev,
+ libwayland-dev,
+ wayland-protocols
+Standards-Version: 4.7.0
+Homepage: https://github.com/LXYan2333/swan-dict
+Rules-Requires-Root: no
+
+Package: swan-dict
+Architecture: any
+Depends:
+ ${misc:Depends},
+ ${shlibs:Depends},
+ kwin-wayland | kwin-x11,
+ plasma-workspace,
+ qml6-module-qtquick,
+ qml6-module-qtquick-controls,
+ qml6-module-qtquick-layouts,
+ libqt6sql6-sqlite
+Description: KDE Plasma dictionary clock widget
+ Swan Dict is a KDE Plasma 6 widget derived from the Digital Clock. It replaces
+ the date label with a compact local dictionary translation of the primary
+ selection and opens a full dictionary popup on click.

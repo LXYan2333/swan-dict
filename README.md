@@ -40,6 +40,34 @@ https://github.com/program-in-chinese/vscode_english_chinese_dictionary
 - 支持简体中文界面翻译。
 - 支持从系统安装的 Digital Clock 复制源码并应用补丁，尽量匹配发行版自己的 Plasma 版本。
 
+## 安装
+
+当前项目已经准备了 Open Build Service 打包配置，目标包括：
+
+- Debian 13
+- Fedora 44
+- Arch Linux
+
+请前往 [Open Build Service](https://software.opensuse.org/download.html?project=home%3Alxyan3&package=swan-dict) 选择您对应的发行版进行安装。页面上有详细的安装步骤指引。
+
+安装完成后，请在 KDE 桌面右键，点击`进入编辑模式`
+
+选择左上角`添加或者管理挂件`
+
+搜索`swan dict`或者`天鹅词典`，将搜索结果中的插件拖到系统的时钟区域
+
+最后删除系统原来的时钟
+
+即可完成安装。
+
+- 为什么不使用 KDE 自带的桌面小部件商店分发？
+  - KDE 自带的桌面小部件商店在国内访问困难
+  - 为了访问系统的 primary selection，本项目有`C++`二进制代码，[无法使用KDE自带的商店分发](https://develop.kde.org/docs/plasma/widget/c-api/)
+- 为什么需要系统级安装？
+  - 一般的桌面小部件可以安装到用户家目录，无需系统级安装
+  - 但是为了与`QML`编写的桌面小部件集成，本项目的`C++`二进制代码编译成了一个`QML`模块。为了让 KDE 能找到这个模块，我们必须将它放在`QML`的系统级默认导入目录
+  - 如果设置`QML2_IMPORT_PATH`环境变量到我们的`QML`模块位置，可以实现在用户目录下安装，但是这需要用户手动修改配置文件以实现环境变量的更改，用户体验不佳
+
 ## 依赖
 
 构建依赖大致包括：
@@ -127,6 +155,10 @@ QML2_IMPORT_PATH=build/src plasmoidviewer -a applet
 cmake --build build
 ```
 
+注意：这是开发测试方式，不等同于在 Plasma 面板中正式安装。
+`QML2_IMPORT_PATH=build/src` 只对这条 `plasmoidviewer` 命令生效，不会自动影响
+Plasma 桌面进程。
+
 ## 可选 KWin 鼠标点击辅助（默认开启）
 
 Wayland 下 primary selection 的提供方有时不会在“视觉上取消选中”时清空 selection。
@@ -155,22 +187,46 @@ sudo cmake --install build
 qdbus6 org.kde.KWin /Effects loadEffect swandictmousehelper
 ```
 
-## 安装
+### 从源码系统安装
 
-系统安装：
+如果不使用 OBS 包，也可以从源码构建并安装到系统：
 
 ```console
+git submodule update --init --recursive
+cmake -B build -S . -DCMAKE_BUILD_TYPE=RelWithDebInfo
+cmake --build build
 sudo cmake --install build
 ```
 
-开发时也可以只安装或升级 applet 包：
+默认安装前缀由 CMake/KDE 安装目录决定。通常会安装到 `/usr/local` 下，包括：
+
+- Plasma applet package
+- 原生 QML 插件 `com.github.LXYan2333.SwanDict`
+- 简体中文翻译文件
+- 可选 KWin helper effect
+
+如果你想让它像发行版包一样安装到 `/usr`，配置时指定：
 
 ```console
-kpackagetool6 --type Plasma/Applet --install applet
-kpackagetool6 --type Plasma/Applet --upgrade applet
+cmake -B build -S . \
+  -DCMAKE_BUILD_TYPE=RelWithDebInfo \
+  -DCMAKE_INSTALL_PREFIX=/usr
+cmake --build build
+sudo cmake --install build
 ```
 
-注意：原生 QML 插件 `.so` 由 CMake 安装，不建议手动复制到 applet 目录。
+安装后可以检查 QML 插件是否存在。不同发行版的库目录可能不同，例如：
+
+```console
+find /usr /usr/local -path '*com/github/LXYan2333/SwanDict*' -print
+```
+
+如果已经打开了 Plasma 桌面，但小组件列表里看不到它，可以重新登录，或重启 Plasma
+shell：
+
+```console
+$ plasmashell --replace
+```
 
 ## Digital Clock 同步机制
 

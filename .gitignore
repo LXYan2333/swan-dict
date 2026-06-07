@@ -12,3 +12,4 @@ applet/contents/ui/main.qml
 applet/contents/data/ecdict.sqlite
 .cache/
 __pycache__/
+binaries/

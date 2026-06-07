@@ -4,12 +4,15 @@ set -euo pipefail
 repo_root="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)"
 upstream="${SWAN_DICT_DIGITAL_CLOCK_SOURCE:-/usr/share/plasma/plasmoids/org.kde.plasma.digitalclock/contents}"
 target="${repo_root}/applet/contents"
-patch_dir="${repo_root}/patches"
+patch_dir="${SWAN_DICT_DIGITAL_CLOCK_PATCH_DIR:-${repo_root}/patches}"
 allow_overwrite="${SWAN_DICT_SYNC_DIGITAL_CLOCK_OVERWRITE:-0}"
 
-if [[ ! -d "${upstream}" ]]; then
-    echo "Digital Clock source not found: ${upstream}" >&2
-    exit 1
+if [[ -d "${upstream}/ui" ]]; then
+    upstream_ui="${upstream}/ui"
+    upstream_config="${upstream}/config"
+else
+    upstream_ui="${upstream}"
+    upstream_config="${upstream}"
 fi
 
 if ! compgen -G "${patch_dir}/*.patch" > /dev/null; then
@@ -21,13 +24,27 @@ has_existing_generated_files=false
 if [[ -d "${target}/config" ]]; then
     has_existing_generated_files=true
 fi
-for upstream_file in "${upstream}/ui/"*.qml; do
-    target_file="${target}/ui/$(basename -- "${upstream_file}")"
-    if [[ -e "${target_file}" ]]; then
-        has_existing_generated_files=true
-        break
+if [[ -d "${upstream_ui}" ]] && compgen -G "${upstream_ui}/*.qml" > /dev/null; then
+    for upstream_file in "${upstream_ui}/"*.qml; do
+        target_file="${target}/ui/$(basename -- "${upstream_file}")"
+        if [[ -e "${target_file}" ]]; then
+            has_existing_generated_files=true
+            break
+        fi
+    done
+elif [[ -d "${target}/ui" ]] && compgen -G "${target}/ui/*.qml" > /dev/null; then
+    has_existing_generated_files=true
+fi
+
+if [[ ! -d "${upstream}" ]]; then
+    if [[ "${has_existing_generated_files}" == true ]]; then
+        echo "Digital Clock source not found: ${upstream}; using existing generated files." >&2
+        exit 0
     fi
-done
+
+    echo "Digital Clock source not found: ${upstream}" >&2
+    exit 1
+fi
 
 if [[ "${has_existing_generated_files}" == true && "${allow_overwrite}" != "1" ]]; then
     echo "Digital Clock generated files already exist; not overwriting." >&2
@@ -37,8 +54,17 @@ fi
 
 rm -rf "${target}/config"
 mkdir -p "${target}/ui"
-cp -a "${upstream}/config" "${target}/"
-for upstream_file in "${upstream}/ui/"*.qml; do
+mkdir -p "${target}/config"
+if [[ -d "${upstream_config}/config" ]]; then
+    cp -a "${upstream_config}/config" "${target}/"
+else
+    cp -a "${upstream_config}/config.qml" "${target}/config/"
+    cp -a "${upstream_config}/main.xml" "${target}/config/"
+fi
+for upstream_file in "${upstream_ui}/"*.qml; do
+    if [[ "${upstream_ui}" == "${upstream_config}" && "$(basename -- "${upstream_file}")" == "config.qml" ]]; then
+        continue
+    fi
     cp -a "${upstream_file}" "${target}/ui/"
 done
 

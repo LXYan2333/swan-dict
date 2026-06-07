@@ -1,0 +1,71 @@
+name: Trigger OBS Build
+
+on:
+  push:
+    tags:
+      - "v*"
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Version to package; leave empty to use CMakeLists.txt"
+        required: false
+      commit_message:
+        description: "OBS commit message; leave empty for the default"
+        required: false
+
+permissions:
+  contents: read
+
+jobs:
+  update-obs:
+    name: Update OBS Sources
+    runs-on: ubuntu-latest
+
+    env:
+      SWAN_DICT_OBS_PROJECT: home:lxyan3
+      SWAN_DICT_OBS_PACKAGE: swan-dict
+      SWAN_DICT_OBS_COMMIT: "1"
+      SWAN_DICT_VERSION: ${{ github.event.inputs.version || '' }}
+      SWAN_DICT_OBS_COMMIT_MESSAGE: ${{ github.event.inputs.commit_message || '' }}
+
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Install packaging tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y osc dpkg-dev xz-utils curl
+
+      - name: Configure osc
+        env:
+          OBS_USER: ${{ secrets.OBS_USER }}
+          OBS_PASSWORD: ${{ secrets.OBS_PASSWORD }}
+        run: |
+          test -n "${OBS_USER}"
+          test -n "${OBS_PASSWORD}"
+          mkdir -p "${HOME}/.config/osc"
+          cat > "${HOME}/.config/osc/oscrc" <<EOF
+          [general]
+          apiurl = https://api.opensuse.org
+          no_verify = 0
+
+          [https://api.opensuse.org]
+          user = ${OBS_USER}
+          pass = ${OBS_PASSWORD}
+          EOF
+          chmod 600 "${HOME}/.config/osc/oscrc"
+
+      - name: Update OBS package sources
+        run: |
+          if [ -z "${SWAN_DICT_OBS_COMMIT_MESSAGE}" ]; then
+            SWAN_DICT_OBS_COMMIT_MESSAGE="Release ${GITHUB_REF_NAME}"
+          fi
+          export SWAN_DICT_OBS_COMMIT_MESSAGE
+          packaging/obs/update-obs-sources.sh
+
+      - name: Show OBS build results
+        run: |
+          osc results "${SWAN_DICT_OBS_PROJECT}" "${SWAN_DICT_OBS_PACKAGE}" --verbose

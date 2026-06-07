@@ -32,7 +32,9 @@ These generated files are ignored by git. Do not treat them as canonical source.
 
 Project-owned QML files are kept directly in the applet tree:
 
+- `applet/contents/ui/DictionaryTooltip.qml`
 - `applet/contents/ui/DictionaryPopup.qml`
+- `applet/contents/ui/SwanDictController.qml`
 - `applet/contents/ui/configTranslation.qml`
 
 ## Patch Workflow
@@ -89,6 +91,22 @@ edits.
 OBS/package builds should depend on the distro package that provides the system
 Digital Clock, usually `plasma-workspace`, and let CMake run the sync script in
 a clean source tree where generated files are absent.
+
+Arch is an exception: its `plasma-workspace` binary package does not ship
+copyable Digital Clock applet QML under
+`/usr/share/plasma/plasmoids/org.kde.plasma.digitalclock/contents`. For Arch
+OBS source archives, prepare the generated fallback files from Arch's own
+`plasma-workspace` source package recipe:
+
+```sh
+SWAN_DICT_PREPARE_ARCH_DIGITAL_CLOCK_FALLBACK_OVERWRITE=1 scripts/prepare-arch-digital-clock-fallback.sh
+```
+
+The script uses `pkgctl repo clone plasma-workspace`, `makepkg --nobuild
+--nodeps`, then syncs from `applets/digital-clock/package/contents` and applies
+`patches/*.patch`. Do not add KDE `plasma-workspace` as a git submodule.
+On non-Arch systems, set `SWAN_DICT_ARCH_PLASMA_WORKSPACE_SOURCE_DIR` to an
+already unpacked matching `plasma-workspace` source tree.
 
 ## Dictionary Database
 
@@ -171,13 +189,14 @@ Config key `startKWinMouseHelper` controls whether the widget asks KWin to load
 the helper on startup. It defaults to `true`, but loading must remain
 best-effort and silent when KWin or the helper is unavailable.
 
-Build the helper only when explicitly requested:
+The top-level CMake default builds the helper:
 
 ```sh
 cmake -B build -S . -DSWAN_DICT_BUILD_KWIN_HELPER=ON
 ```
 
-The helper requires KWin development files, for example Debian's `kwin-dev`.
+OBS distro packages should build the helper by default. The helper requires
+KWin development files, for example Debian's `kwin-dev`.
 
 ## Translation Behavior
 
@@ -313,9 +332,9 @@ persist:
 scripts/regenerate-patches.sh
 ```
 
-When changing only project-owned files such as `DictionaryPopup.qml`,
-`configTranslation.qml`, or files under `src/`, patch regeneration is not
-needed.
+When changing only project-owned files such as `DictionaryTooltip.qml`,
+`DictionaryPopup.qml`, `SwanDictController.qml`, `configTranslation.qml`, or
+files under `src/`, patch regeneration is not needed.
 
 ## Safety Notes
 

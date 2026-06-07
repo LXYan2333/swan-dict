@@ -1,0 +1,48 @@
+# Maintainer: LXYan <z00823823@outlook.com>
+
+pkgname=swan-dict
+pkgver=1.0.0
+pkgrel=1
+pkgdesc="KDE Plasma dictionary clock widget"
+arch=('x86_64')
+url="https://github.com/LXYan2333/swan-dict"
+license=('GPL-2.0-or-later')
+depends=(
+  'ki18n'
+  'kconfig'
+  'kpackage'
+  'kwin'
+  'kwindowsystem'
+  'libepoxy'
+  'libdrm'
+  'libplasma'
+  'plasma-desktop'
+  'plasma-workspace'
+  'qt6-base'
+  'qt6-declarative'
+  'wayland'
+)
+makedepends=(
+  'cmake'
+  'extra-cmake-modules'
+  'ninja'
+  'pkgconf'
+  'python'
+  'wayland-protocols'
+)
+source=("${pkgname}-${pkgver}.tar.xz")
+sha256sums=('SKIP')
+
+build() {
+  cmake -B build -S "${pkgname}-${pkgver}" -G Ninja \
+    -DCMAKE_BUILD_TYPE=RelWithDebInfo \
+    -DCMAKE_INSTALL_PREFIX=/usr \
+    -DSWAN_DICT_GENERATE_DICTIONARY=ON \
+    -DSWAN_DICT_BUILD_KWIN_HELPER=ON
+  cmake --build build
+}
+
+package() {
+  DESTDIR="${pkgdir}" cmake --install build
+  install -Dm644 "${pkgname}-${pkgver}/LICENSE" "${pkgdir}/usr/share/licenses/${pkgname}/LICENSE"
+}
