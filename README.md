@@ -52,11 +52,19 @@ https://github.com/program-in-chinese/vscode_english_chinese_dictionary
 
 安装完成后，请在 KDE 桌面右键，点击`进入编辑模式`
 
+<img width="320" alt="屏幕截图_20260608_034803" src="https://github.com/user-attachments/assets/9a730f26-7fdc-4036-987b-998b9a5f458f" />
+
 选择左上角`添加或者管理挂件`
+
+<img width="320" alt="屏幕截图_20260608_034940" src="https://github.com/user-attachments/assets/12207557-0967-41c7-a33d-740837b1c4cf" />
 
 搜索`swan dict`或者`天鹅词典`，将搜索结果中的插件拖到系统的时钟区域
 
+<img width="640" alt="屏幕截图_20260608_035123" src="https://github.com/user-attachments/assets/57aabd8c-24b9-4659-bf9c-c2164480d708" />
+
 最后删除系统原来的时钟
+
+<img width="320" alt="屏幕截图_20260608_035458" src="https://github.com/user-attachments/assets/b34b92bc-e929-42e5-ba86-fa855dee2cbc" />
 
 即可完成安装。
 
