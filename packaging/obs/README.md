@@ -214,13 +214,19 @@ Arch runtime dependencies:
 1. Create one OBS project with repositories for Debian, Ubuntu, Fedora, and
    Arch.
 2. Use the packaging templates in this directory:
-   - `_service` pulls the GitHub repository and creates a source tarball.
    - `swan-dict.spec` is the initial RPM recipe for Fedora/openSUSE-style
      repositories.
    - `debian/` is the initial Debian/Ubuntu packaging directory.
    - `PKGBUILD` is the initial Arch recipe.
-3. Ensure each recipe runs the normal CMake configure/build/install steps.
-4. Do not call `scripts/regenerate-patches.sh` in OBS. Patch regeneration is a
+3. Generate and upload source archives with
+   `packaging/obs/update-obs-sources.sh`, or let the GitHub Actions workflow do
+   it after a release tag.
+4. Do not upload an OBS `_service` file for this package. The source archive is
+   already generated before `osc commit`; uploading `_service` makes OBS try to
+   install source-service packages such as `obs-service-tar` in target
+   repositories, which breaks Debian/Arch/Fedora builds.
+5. Ensure each recipe runs the normal CMake configure/build/install steps.
+6. Do not call `scripts/regenerate-patches.sh` in OBS. Patch regeneration is a
    maintainer/dev action, not a package build action.
 
 The recipes build and install the KWin helper by default:

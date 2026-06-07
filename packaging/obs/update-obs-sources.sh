@@ -157,7 +157,13 @@ cp "${tmp_dir}/${debian_source_tarball}" "${package_dir}/"
 cp "${tmp_dir}/${debian_dsc}" "${package_dir}/"
 cp "${repo_root}/packaging/obs/PKGBUILD" "${package_dir}/"
 cp "${repo_root}/packaging/obs/swan-dict.spec" "${package_dir}/"
-cp "${repo_root}/packaging/obs/_service" "${package_dir}/"
+
+if [[ -e "${package_dir}/_service" ]]; then
+    (
+        cd "${package_dir}"
+        osc remove --force _service >/dev/null 2>&1 || rm -f -- _service
+    )
+fi
 
 remove_old_versioned_sources \
     "${package_dir}" \
@@ -173,8 +179,7 @@ stage_obs_files \
     "${debian_source_tarball}" \
     "${debian_dsc}" \
     PKGBUILD \
-    swan-dict.spec \
-    _service
+    swan-dict.spec
 
 if [[ "${SWAN_DICT_OBS_COMMIT:-0}" == "1" ]]; then
     (
