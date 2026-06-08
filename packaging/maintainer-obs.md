@@ -111,17 +111,17 @@ The current OBS setup uses these files:
 ```text
 PKGBUILD
 swan-dict.spec
-swan-dict-1.0.0.tar.xz
-swan-dict_1.0.0.orig.tar.xz
-swan-dict_1.0.0-1.debian.tar.xz
-swan-dict_1.0.0-1.dsc
+swan-dict-1.1.0.tar.xz
+swan-dict_1.1.0.orig.tar.xz
+swan-dict_1.1.0-1.debian.tar.xz
+swan-dict_1.1.0-1.dsc
 ```
 
 Create a temporary source tree:
 
 ```console
 tmp_dir="$(mktemp -d /tmp/swan-dict-obs-src.XXXXXX)"
-mkdir -p "${tmp_dir}/swan-dict-1.0.0"
+mkdir -p "${tmp_dir}/swan-dict-1.1.0"
 tar -C /home/lxyan/Code/kde/swan-dict \
     --exclude='./.git' \
     --exclude='./build' \
@@ -129,32 +129,32 @@ tar -C /home/lxyan/Code/kde/swan-dict \
     --exclude='./third_party/ECDICT/stardict.7z' \
     --exclude='./.cache' \
     --exclude='./__pycache__' \
-    -cf - . | tar -C "${tmp_dir}/swan-dict-1.0.0" -xf -
+    -cf - . | tar -C "${tmp_dir}/swan-dict-1.1.0" -xf -
 ```
 
 Create the generic tarball for RPM and Arch:
 
 ```console
 tar -C "${tmp_dir}" -cJf \
-    /tmp/swan-dict-obs/home:lxyan3/swan-dict/swan-dict-1.0.0.tar.xz \
-    swan-dict-1.0.0
+    /tmp/swan-dict-obs/home:lxyan3/swan-dict/swan-dict-1.1.0.tar.xz \
+    swan-dict-1.1.0
 ```
 
 Create Debian source artifacts:
 
 ```console
 cp -a /home/lxyan/Code/kde/swan-dict/packaging/obs/debian \
-    "${tmp_dir}/swan-dict-1.0.0/debian"
-tar -C "${tmp_dir}" --exclude='swan-dict-1.0.0/debian' -cJf \
-    "${tmp_dir}/swan-dict_1.0.0.orig.tar.xz" \
-    swan-dict-1.0.0
+    "${tmp_dir}/swan-dict-1.1.0/debian"
+tar -C "${tmp_dir}" --exclude='swan-dict-1.1.0/debian' -cJf \
+    "${tmp_dir}/swan-dict_1.1.0.orig.tar.xz" \
+    swan-dict-1.1.0
 cd "${tmp_dir}"
-dpkg-source -b swan-dict-1.0.0
-cp swan-dict_1.0.0.orig.tar.xz \
+dpkg-source -b swan-dict-1.1.0
+cp swan-dict_1.1.0.orig.tar.xz \
     /tmp/swan-dict-obs/home:lxyan3/swan-dict/
-cp swan-dict_1.0.0-1.debian.tar.xz \
+cp swan-dict_1.1.0-1.debian.tar.xz \
     /tmp/swan-dict-obs/home:lxyan3/swan-dict/
-cp swan-dict_1.0.0-1.dsc \
+cp swan-dict_1.1.0-1.dsc \
     /tmp/swan-dict-obs/home:lxyan3/swan-dict/
 ```
 
@@ -175,10 +175,10 @@ osc remove swan-dict-0.1.tar.xz
 osc remove swan-dict_0.1.orig.tar.xz
 osc remove swan-dict_0.1-1.debian.tar.xz
 osc remove swan-dict_0.1-1.dsc
-osc add swan-dict-1.0.0.tar.xz
-osc add swan-dict_1.0.0.orig.tar.xz
-osc add swan-dict_1.0.0-1.debian.tar.xz
-osc add swan-dict_1.0.0-1.dsc
+osc add swan-dict-1.1.0.tar.xz
+osc add swan-dict_1.1.0.orig.tar.xz
+osc add swan-dict_1.1.0-1.debian.tar.xz
+osc add swan-dict_1.1.0-1.dsc
 ```
 
 ## Submit OBS Changes
@@ -193,7 +193,7 @@ osc status
 Commit:
 
 ```console
-osc commit -m "Release 1.0.0"
+osc commit -m "Release 1.1.0"
 ```
 
 ## GitHub Actions
@@ -206,7 +206,7 @@ The repository has a workflow at:
 
 It updates the OBS package when either of these happens:
 
-- a git tag matching `v*` is pushed, for example `v1.0.0`
+- a git tag matching `v*` is pushed, for example `v1.1.0`
 - the workflow is started manually from GitHub Actions
 
 Add these GitHub repository secrets before using it:
@@ -324,6 +324,6 @@ Fedora_44 x86_64
 6. Tag after OBS is green:
 
 ```console
-git tag -a v1.0.0 -m "Swan Dict 1.0.0"
+git tag -a v1.1.0 -m "Swan Dict 1.1.0"
 git push origin main --tags
 ```
