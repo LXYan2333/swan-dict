@@ -2,6 +2,13 @@ cmake_minimum_required(VERSION 3.20)
 
 project(swan-dict VERSION 1.1.0 LANGUAGES C CXX)
 
+if (CMAKE_BUILD_TYPE)
+    message(STATUS "Swan Dict CMAKE_BUILD_TYPE: ${CMAKE_BUILD_TYPE}")
+else()
+    set(CMAKE_BUILD_TYPE "RelWithDebInfo")
+    message(STATUS "Swan Dict CMAKE_BUILD_TYPE: not specified, set to RelWithDebInfo")
+endif()
+
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_AUTOMOC ON)
