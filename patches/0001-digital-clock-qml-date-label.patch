@@ -89,12 +89,13 @@
          }
      }
      /*
-@@ -720,7 +734,7 @@
+@@ -720,7 +734,8 @@
          timeZoneLabel.text = timezoneString;
  
          if (Plasmoid.configuration.showDate) {
 -            dateLabel.text = dateFormatter(getCurrentTime());
-+            dateLabel.text = root.hasDictEntry ? (root.dictEntry.summary ?? "") : dateFormatter(getCurrentTime());
++            const summary = root.dictEntry?.summary ?? "";
++            dateLabel.text = summary.length > 0 ? summary : dateFormatter(getCurrentTime());
          } else {
              // clear it so it doesn't take space in the layout
              dateLabel.text = "";
