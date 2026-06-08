@@ -71,3 +71,8 @@ done
 for patch_file in "${patch_dir}"/*.patch; do
     patch -d "${repo_root}/applet" -p1 < "${patch_file}"
 done
+
+owned_config="${repo_root}/applet-owned/config/config.qml"
+if [[ -f "${owned_config}" ]]; then
+    cp -a "${owned_config}" "${target}/config/config.qml"
+fi

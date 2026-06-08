@@ -41,10 +41,10 @@
       * not here.
       */
 -    Accessible.name: i18nc("@info:tooltip %1 is a localized long date", "Today is %1", tooltipSubtext.text)
-+    Accessible.name: root.hasDictEntry ? root.dictEntry.matchedWord : i18nc("@info:tooltip %1 is a localized long date", "Today is %1", tooltipSubtext.text)
++    Accessible.name: root.hasDictEntry ? (root.dictEntry.matchedWord ?? "") : i18nc("@info:tooltip %1 is a localized long date", "Today is %1", tooltipSubtext.text)
      Accessible.description: {
 +        if (root.hasDictEntry) {
-+            return root.dictEntry.fullText;
++            return root.dictEntry.fullText ?? "";
 +        }
          const description = tooltipSubLabelText.visible ? [tooltipSubLabelText.text] : [];
          for (let i = 0; i < timeZoneRepeater.count; i += 2) {

@@ -282,7 +282,6 @@ import org.kde.plasma.private.digitalclock
 patches/0001-digital-clock-qml-date-label.patch
 patches/0002-tooltip-qml-dictionary-content.patch
 patches/0003-main-qml-swan-dict-wiring.patch
-patches/0004-config-qml-translation-page.patch
 patches/0005-main-xml-translation-settings.patch
 ```
 
@@ -297,6 +296,7 @@ scripts/regenerate-patches.sh
 ```text
 applet/contents/ui/DictionaryPopup.qml
 applet/contents/ui/configTranslation.qml
+applet-owned/config/config.qml
 ```
 
 ## 配置项

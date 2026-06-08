@@ -18,6 +18,11 @@
         "Website": "https://github.com/LXYan2333/swan-dict",
         "BugReportUrl": "https://github.com/LXYan2333/swan-dict/issues"
     },
+    "X-KDE-ParentApp": "org.kde.plasmashell",
     "X-Plasma-API-Minimum-Version": "6.0",
+    "X-Plasma-Provides": [
+        "org.kde.plasma.time",
+        "org.kde.plasma.date"
+    ],
     "KPackageStructure": "Plasma/Applet"
 }

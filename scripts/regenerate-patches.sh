@@ -37,7 +37,6 @@ files=(
     "DigitalClock.qml:0001-digital-clock-qml-date-label.patch"
     "Tooltip.qml:0002-tooltip-qml-dictionary-content.patch"
     "main.qml:0003-main-qml-swan-dict-wiring.patch"
-    "../config/config.qml:0004-config-qml-translation-page.patch"
     "../config/main.xml:0005-main-xml-translation-settings.patch"
     "configAppearance.qml:0006-config-appearance-digital-clock-i18n.patch"
     "configCalendar.qml:0007-config-calendar-digital-clock-i18n.patch"

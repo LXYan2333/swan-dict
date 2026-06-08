@@ -94,7 +94,7 @@
  
          if (Plasmoid.configuration.showDate) {
 -            dateLabel.text = main.dateFormatter(clock.dateTime);
-+            dateLabel.text = root.hasDictEntry ? root.dictEntry.summary : main.dateFormatter(clock.dateTime);
++            dateLabel.text = root.hasDictEntry ? (root.dictEntry.summary ?? "") : main.dateFormatter(clock.dateTime);
          } else {
              // clear it so it doesn't take space in the layout
              dateLabel.text = "";

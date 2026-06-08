@@ -37,6 +37,11 @@ Project-owned QML files are kept directly in the applet tree:
 - `applet/contents/ui/SwanDictController.qml`
 - `applet/contents/ui/configTranslation.qml`
 
+The applet configuration model is project-owned but copied into the generated
+applet tree during sync:
+
+- `applet-owned/config/config.qml`
+
 ## Patch Workflow
 
 Upstream-owned Digital Clock changes are stored as split patch files:
@@ -44,7 +49,6 @@ Upstream-owned Digital Clock changes are stored as split patch files:
 - `patches/0001-digital-clock-qml-date-label.patch`
 - `patches/0002-tooltip-qml-dictionary-content.patch`
 - `patches/0003-main-qml-swan-dict-wiring.patch`
-- `patches/0004-config-qml-translation-page.patch`
 - `patches/0005-main-xml-translation-settings.patch`
 - `patches/0006-config-appearance-digital-clock-i18n.patch`
 - `patches/0007-config-calendar-digital-clock-i18n.patch`
@@ -83,6 +87,21 @@ to copy the system Digital Clock from:
 ```
 
 and apply `patches/*.patch`.
+
+After applying patches, the sync script copies:
+
+```text
+applet-owned/config/config.qml
+```
+
+to:
+
+```text
+applet/contents/config/config.qml
+```
+
+This avoids cross-distro breakage from upstream Digital Clock's dynamic calendar
+event plugin config model, whose roles differ between Plasma versions.
 
 Without `SWAN_DICT_SYNC_DIGITAL_CLOCK_OVERWRITE=1`, the sync script refuses to
 overwrite existing generated files. This is intentional to protect local dev

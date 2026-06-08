@@ -14,6 +14,7 @@ files in the OBS source archive.
 The source package should include:
 
 - `applet/metadata.json`
+- `applet-owned/config/config.qml`
 - owned QML files, especially `applet/contents/ui/DictionaryPopup.qml` and
   `applet/contents/ui/configTranslation.qml`
 - copied Digital Clock QML/config files when building targets that do not ship

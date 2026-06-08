@@ -13,3 +13,4 @@ applet/contents/data/ecdict.sqlite
 .cache/
 __pycache__/
 binaries/
+build-*/

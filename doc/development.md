@@ -33,6 +33,23 @@ com.github.LXYan2333.swan-dict
 - `applet/contents/data/ecdict.sqlite`：构建时生成的 SQLite 词典数据库，不提交到 git。
 
 ```text
+applet-owned/
+```
+
+项目自有但需要复制进 applet package 的文件。目前包含静态配置模型：
+
+- `applet-owned/config/config.qml`
+
+sync 阶段会把它复制为：
+
+```text
+applet/contents/config/config.qml
+```
+
+这样做是为了避免不同 Plasma 版本的 upstream Digital Clock `config.qml`
+动态 calendar event plugin model 差异导致整个配置页加载失败。
+
+```text
 src/
 ```
 
@@ -113,6 +130,7 @@ OBS、Debian、RPM、Arch 打包相关文件。
 
 项目自有 QML 文件直接提交：
 
+- `applet-owned/config/config.qml`：静态 applet config model，sync 后复制到 `applet/contents/config/config.qml`。
 - `DictionaryTooltip.qml`：悬停提示中的词典内容。
 - `DictionaryPopup.qml`：点击弹窗中的词典内容、DeepSeek 按钮、复制按钮。
 - `SwanDictController.qml`：连接 selection watcher、translator 和配置的控制器。
@@ -142,6 +160,7 @@ scripts/sync-digital-clock.sh
   -> applet/contents/config/
   -> applet/contents/ui/*.qml
   -> patches/*.patch
+  -> applet-owned/config/config.qml overwrites contents/config/config.qml
   -> patched Swan Dict applet
 ```
 
