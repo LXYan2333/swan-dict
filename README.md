@@ -22,23 +22,12 @@ https://github.com/user-attachments/assets/03ee851b-52c1-4550-bb38-dbdf94e013e0
 - 多词选中时，按单词拆分并分别显示词典内容。
 - 可选配置 DeepSeek API key，在弹窗中手动触发整句翻译。
 
-本地词典数据来自 [ECDICT](https://github.com/skywind3000/ECDICT)。
-
-选中文本预处理思路参考：
-
-```text
-https://github.com/program-in-chinese/vscode_english_chinese_dictionary
-```
-
 ## 功能
 
-- 支持 KDE Plasma 6。
-- Wayland 下通过内置 Wayland primary-selection client 读取 primary selection。
-- X11 下通过 `QClipboard::Selection` 读取 primary selection。
+- 支持 KDE Plasma 6，在几乎任意界面下都能触发划词翻译。
 - 使用本地 SQLite 词典，不依赖网络完成单词翻译。
 - 支持 DeepSeek 手动整句翻译。
 - 支持简体中文界面翻译。
-- 支持从系统安装的 Digital Clock 复制源码并应用补丁，尽量匹配发行版自己的 Plasma 版本。
 
 ## 安装
 
@@ -50,21 +39,15 @@ https://github.com/program-in-chinese/vscode_english_chinese_dictionary
 
 请前往 [Open Build Service](https://software.opensuse.org/download.html?project=home%3Alxyan3&package=swan-dict) 选择您对应的发行版进行安装。页面上有详细的安装步骤指引。
 
-安装完成后，请在 KDE 桌面右键，点击`进入编辑模式`
+Open Build Service 的 Ubuntu 支持仍未完善，Ubuntu 用户可前往 [Github Action](https://github.com/LXYan2333/swan-dict/actions) 下载最新构建的软件包
 
-<img width="320" alt="屏幕截图_20260608_034803" src="https://github.com/user-attachments/assets/9a730f26-7fdc-4036-987b-998b9a5f458f" />
+安装完成后，请右键单击系统原有时钟，在弹出菜单里选择`显示替代部件`
 
-选择左上角`添加或者管理挂件`
+<img width="320" alt="屏幕截图_20260608_211012" src="https://github.com/user-attachments/assets/68e3790f-737b-4e2a-ac33-a0208851180e" />
 
-<img width="320" alt="屏幕截图_20260608_034940" src="https://github.com/user-attachments/assets/12207557-0967-41c7-a33d-740837b1c4cf" />
+在弹出菜单中选择`天鹅词典`
 
-搜索`swan dict`或者`天鹅词典`，将搜索结果中的插件拖到系统的时钟区域
-
-<img width="640" alt="屏幕截图_20260608_035123" src="https://github.com/user-attachments/assets/57aabd8c-24b9-4659-bf9c-c2164480d708" />
-
-最后删除系统原来的时钟
-
-<img width="320" alt="屏幕截图_20260608_035458" src="https://github.com/user-attachments/assets/b34b92bc-e929-42e5-ba86-fa855dee2cbc" />
+<img width="320" alt="屏幕截图_20260608_211556" src="https://github.com/user-attachments/assets/8e8bb6aa-0462-4754-87d6-28cb3d1a6829" />
 
 即可完成安装。
 
