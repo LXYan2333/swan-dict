@@ -30,7 +30,7 @@ ConfigModel {
     }
 
     ConfigCategory {
-        name: i18n("Translation")
+        name: i18nd("plasma_applet_com.github.LXYan2333.swan-dict", "Translation")
         icon: "preferences-desktop-locale"
         source: "configTranslation.qml"
     }
