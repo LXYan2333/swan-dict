@@ -191,6 +191,17 @@ ColumnLayout {
     }
 
     ColumnLayout {
+        id: exchangeRowsLayout
+
+        property real labelWidth: {
+            let width = 0;
+            const rows = root.dictEntry.exchangeRows ?? [];
+            for (let i = 0; i < rows.length; i++) {
+                width = Math.max(width, labelMetrics.advanceWidth(rows[i].label ?? ""));
+            }
+            return Math.ceil(width);
+        }
+
         Layout.fillWidth: true
         Layout.minimumWidth: Math.min(implicitWidth, root.preferredTextWidth)
         Layout.preferredWidth: root.preferredTextWidth
@@ -199,6 +210,10 @@ ColumnLayout {
         spacing: Kirigami.Units.smallSpacing
         visible: root.dictEntry.exchangeRows !== undefined
             && root.dictEntry.exchangeRows.length > 0
+
+        FontMetrics {
+            id: labelMetrics
+        }
 
         Repeater {
             model: root.dictEntry.exchangeRows ?? []
@@ -210,7 +225,8 @@ ColumnLayout {
                 spacing: Kirigami.Units.smallSpacing
 
                 PlasmaComponents.Label {
-                    Layout.preferredWidth: implicitWidth
+                    Layout.alignment: Qt.AlignLeft | Qt.AlignTop
+                    Layout.preferredWidth: exchangeRowsLayout.labelWidth
                     text: modelData.label
                     opacity: 0.7
                     wrapMode: Text.Wrap
@@ -218,6 +234,7 @@ ColumnLayout {
                 }
 
                 PlasmaComponents.Label {
+                    Layout.alignment: Qt.AlignTop
                     Layout.fillWidth: true
                     text: modelData.value
                     wrapMode: Text.Wrap
