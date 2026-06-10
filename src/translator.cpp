@@ -249,7 +249,7 @@ QString Translator::normalizeQuery(QString text) const
         return QString();
     }
 
-    return strippedWord(text);
+    return strippedWord(removePossessiveSuffixes(text));
 }
 
 QString Translator::normalizeSentenceQuery(QString text) const
@@ -269,6 +269,15 @@ QString Translator::strippedWord(QString text) const
     static const QRegularExpression whitespace(QStringLiteral("\\s+"));
     text = text.replace(edgePunctuation, QString());
     return text.replace(whitespace, QStringLiteral(" ")).trimmed();
+}
+
+QString Translator::removePossessiveSuffixes(QString text) const
+{
+    static const QRegularExpression singularPossessive(QStringLiteral("([A-Za-z])['\u2019]s(?=$|[^A-Za-z])"), QRegularExpression::CaseInsensitiveOption);
+    static const QRegularExpression pluralPossessive(QStringLiteral("([A-Za-z]s)['\u2019](?=$|[^A-Za-z])"), QRegularExpression::CaseInsensitiveOption);
+    text.replace(singularPossessive, QStringLiteral("\\1"));
+    text.replace(pluralPossessive, QStringLiteral("\\1"));
+    return text;
 }
 
 QStringList Translator::candidateWords(const QString &word) const
@@ -474,7 +483,7 @@ QString Translator::limitedQueryRespectingWordBoundary(const QString &query) con
 
 QStringList Translator::splitQueryWords(const QString &query) const
 {
-    QString text = query;
+    QString text = removePossessiveSuffixes(query);
     text.replace(QRegularExpression(QStringLiteral("([A-Z]+)([A-Z][a-z])")), QStringLiteral("\\1 \\2"));
     text.replace(QRegularExpression(QStringLiteral("([a-z0-9])([A-Z])")), QStringLiteral("\\1 \\2"));
     text.replace(QRegularExpression(QStringLiteral("([A-Za-z])([0-9])")), QStringLiteral("\\1 \\2"));

@@ -53,6 +53,7 @@ public:
     bool ensureDatabase();
     QString normalizeQuery(QString text) const;
     QString normalizeSentenceQuery(QString text) const;
+    QString removePossessiveSuffixes(QString text) const;
     QString strippedWord(QString text) const;
     QStringList candidateWords(const QString &word) const;
     QVariantMap lookupCandidate(const QString &word, const QString &sw);

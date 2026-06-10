@@ -11,6 +11,68 @@ permissions:
   contents: read
 
 jobs:
+  asan-tests:
+    name: ASan unit tests
+    runs-on: ubuntu-latest
+    container: debian:13
+
+    steps:
+      - name: Install checkout tools
+        run: |
+          apt-get update
+          DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends ca-certificates git tar xz-utils
+
+      - name: Check out source
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Install test dependencies
+        run: |
+          apt-get update
+          DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
+            build-essential \
+            cmake \
+            extra-cmake-modules \
+            libdrm-dev \
+            libepoxy-dev \
+            libgtest-dev \
+            libkf6config-dev \
+            libkf6coreaddons-dev \
+            libkf6i18n-dev \
+            libkf6package-dev \
+            libkf6windowsystem-dev \
+            libplasma-dev \
+            libwayland-dev \
+            ninja-build \
+            pkgconf \
+            plasma-workspace \
+            qt6-base-dev \
+            qt6-declarative-dev \
+            wayland-protocols
+
+      - name: Configure ASan test build
+        run: |
+          SWAN_DICT_SYNC_DIGITAL_CLOCK_OVERWRITE=1 cmake -B build-asan -S . -G Ninja \
+            -DCMAKE_BUILD_TYPE=RelWithDebInfo \
+            -DBUILD_TESTING=ON \
+            -DSWAN_DICT_GENERATE_DICTIONARY=OFF \
+            -DSWAN_DICT_BUILD_KWIN_HELPER=OFF \
+            -DCMAKE_C_FLAGS="-fsanitize=address -fno-omit-frame-pointer" \
+            -DCMAKE_CXX_FLAGS="-fsanitize=address -fno-omit-frame-pointer" \
+            -DCMAKE_EXE_LINKER_FLAGS="-fsanitize=address" \
+            -DCMAKE_SHARED_LINKER_FLAGS="-fsanitize=address"
+
+      - name: Build ASan tests
+        run: |
+          cmake --build build-asan --target translator_lookup_test
+
+      - name: Run ASan tests
+        env:
+          ASAN_OPTIONS: detect_leaks=0:strict_string_checks=1:check_initialization_order=1
+        run: |
+          ctest --test-dir build-asan --output-on-failure -R TranslatorLookupTest
+
   build-package:
     name: Build ${{ matrix.distro }} package
     runs-on: ubuntu-latest

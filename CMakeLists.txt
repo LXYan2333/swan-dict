@@ -20,6 +20,7 @@ find_package(ECM REQUIRED NO_MODULE)
 set(CMAKE_MODULE_PATH ${ECM_MODULE_PATH})
 
 include(KDEInstallDirs)
+include(CTest)
 
 if (SWAN_DICT_GENERATE_DICTIONARY)
     find_package(Python3 REQUIRED COMPONENTS Interpreter)
@@ -43,6 +44,10 @@ if (NOT sync_digital_clock_result EQUAL 0)
 endif()
 
 add_subdirectory(src)
+if (BUILD_TESTING)
+    find_package(GTest QUIET REQUIRED)
+    add_subdirectory(tests)
+endif()
 if (SWAN_DICT_BUILD_KWIN_HELPER)
     add_subdirectory(kwin-helper)
 endif()
