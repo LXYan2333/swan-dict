@@ -48,6 +48,7 @@ selection and opens a full dictionary popup on click.
 
 %build
 SWAN_DICT_SYNC_DIGITAL_CLOCK_OVERWRITE=1 %cmake -G Ninja \
+    -DBUILD_TESTING=OFF \
     -DSWAN_DICT_GENERATE_DICTIONARY=ON \
     -DSWAN_DICT_BUILD_KWIN_HELPER=ON
 %cmake_build

@@ -2,6 +2,8 @@ cmake_minimum_required(VERSION 3.20)
 
 project(swan-dict VERSION 1.1.0 LANGUAGES C CXX)
 
+option(BUILD_TESTING "build testing" OFF)
+
 if (CMAKE_BUILD_TYPE)
     message(STATUS "Swan Dict CMAKE_BUILD_TYPE: ${CMAKE_BUILD_TYPE}")
 else()
@@ -45,8 +47,12 @@ endif()
 
 add_subdirectory(src)
 if (BUILD_TESTING)
-    find_package(GTest QUIET REQUIRED)
-    add_subdirectory(tests)
+    find_package(GTest QUIET)
+    if (GTest_FOUND)
+        add_subdirectory(tests)
+    else()
+        message(STATUS "GTest not found; Swan Dict unit tests disabled")
+    endif()
 endif()
 if (SWAN_DICT_BUILD_KWIN_HELPER)
     add_subdirectory(kwin-helper)

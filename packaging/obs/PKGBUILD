@@ -37,6 +37,7 @@ build() {
   cmake -B build -S "${pkgname}-${pkgver}" -G Ninja \
     -DCMAKE_BUILD_TYPE=RelWithDebInfo \
     -DCMAKE_INSTALL_PREFIX=/usr \
+    -DBUILD_TESTING=OFF \
     -DSWAN_DICT_GENERATE_DICTIONARY=ON \
     -DSWAN_DICT_BUILD_KWIN_HELPER=ON
   cmake --build build

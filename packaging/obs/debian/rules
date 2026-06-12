@@ -8,6 +8,7 @@ export SWAN_DICT_SYNC_DIGITAL_CLOCK_OVERWRITE = 1
 
 override_dh_auto_configure:
 	dh_auto_configure -- \
+		-DBUILD_TESTING=OFF \
 		-DSWAN_DICT_GENERATE_DICTIONARY=ON \
 		-DSWAN_DICT_BUILD_KWIN_HELPER=ON
 

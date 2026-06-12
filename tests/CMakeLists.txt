@@ -23,4 +23,6 @@ target_link_libraries(translator_lookup_test
 target_compile_features(translator_lookup_test PRIVATE cxx_std_17)
 
 include(GoogleTest)
-gtest_discover_tests(translator_lookup_test)
+gtest_discover_tests(translator_lookup_test
+    DISCOVERY_MODE PRE_TEST
+)
