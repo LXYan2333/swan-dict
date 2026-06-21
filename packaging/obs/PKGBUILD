@@ -28,6 +28,7 @@ makedepends=(
   'ninja'
   'pkgconf'
   'python'
+  'vulkan-headers'
   'wayland-protocols'
 )
 source=("${pkgname}-${pkgver}.tar.xz")

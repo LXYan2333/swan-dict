@@ -165,6 +165,7 @@ build_arch_package() {
         qt6-declarative \
         sudo \
         tar \
+        vulkan-headers \
         wayland \
         wayland-protocols \
         xz
