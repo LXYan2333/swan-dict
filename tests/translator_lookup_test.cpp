@@ -75,6 +75,51 @@ protected:
                         70,
                         70,
                         QStringLiteral("i:writing/p:wrote/d:written"));
+            insertEntry(database,
+                        QStringLiteral("abashing"),
+                        QStringLiteral("abashing"),
+                        QString(),
+                        QStringLiteral("p. pr. & vb. n. of Abash"),
+                        QStringLiteral("vt. 使困窘"),
+                        0,
+                        0,
+                        QStringLiteral("1:i/0:abash"));
+            insertEntry(database,
+                        QStringLiteral("affiancing"),
+                        QStringLiteral("affiancing"),
+                        QString(),
+                        QStringLiteral("p. pr. / vb. n. of Affiance"),
+                        QStringLiteral("vt. 使订婚"),
+                        0,
+                        0,
+                        QStringLiteral("1:i/0:affiance"));
+            insertEntry(database,
+                        QStringLiteral("christianizing"),
+                        QStringLiteral("christianizing"),
+                        QString(),
+                        QStringLiteral("p. pr. vb. n. of Christianize"),
+                        QStringLiteral("v. 使成为基督教徒"),
+                        0,
+                        0,
+                        QStringLiteral("0:christianize/1:i"));
+            insertEntry(database,
+                        QStringLiteral("chaired"),
+                        QStringLiteral("chaired"),
+                        QString(),
+                        QStringLiteral("imp. & p. pr. of Chair"),
+                        QStringLiteral("vt. 主持"),
+                        0,
+                        0,
+                        QStringLiteral("0:chair/1:dp"));
+            insertEntry(database,
+                        QStringLiteral("shet"),
+                        QStringLiteral("shet"),
+                        QString(),
+                        QStringLiteral("imp. of Shet\np. pr. of Shet\nv. t. & i. To shut."),
+                        QStringLiteral("abbr. Shetland"),
+                        0,
+                        0,
+                        QString());
 
             database.close();
         }
@@ -167,6 +212,34 @@ TEST_F(TranslatorLookupTest, UsesCandidateWordsForInflectedSelection)
 
     EXPECT_EQ(entry.value(QStringLiteral("matchedWord")).toString(), QStringLiteral("write"));
     EXPECT_EQ(entry.value(QStringLiteral("summary")).toString(), QStringLiteral("写"));
+}
+
+TEST_F(TranslatorLookupTest, KeepsCompoundInflectionDefinitionsAsFullWidthNotes)
+{
+    const QList<QPair<QString, QStringList>> examples = {
+        {QStringLiteral("abashing"), {QStringLiteral("p. pr. & vb. n. of Abash")}},
+        {QStringLiteral("affiancing"), {QStringLiteral("p. pr. / vb. n. of Affiance")}},
+        {QStringLiteral("christianizing"), {QStringLiteral("p. pr. vb. n. of Christianize")}},
+        {QStringLiteral("chaired"), {QStringLiteral("imp. & p. pr. of Chair")}},
+        {QStringLiteral("shet"), {
+            QStringLiteral("imp. of Shet"),
+            QStringLiteral("p. pr. of Shet"),
+            QStringLiteral("v. t. & i. To shut."),
+        }},
+    };
+
+    for (const auto &example : examples) {
+        const QVariantMap entry = m_translator.lookup(example.first);
+        const QVariantList rows = entry.value(QStringLiteral("definitionRows")).toList();
+
+        ASSERT_EQ(rows.size(), example.second.size()) << example.first.toStdString();
+        for (qsizetype i = 0; i < rows.size(); ++i) {
+            const QVariantMap row = rows.at(i).toMap();
+            EXPECT_TRUE(row.value(QStringLiteral("isNote")).toBool()) << example.first.toStdString();
+            EXPECT_TRUE(row.value(QStringLiteral("pos")).toString().isEmpty()) << example.first.toStdString();
+            EXPECT_EQ(row.value(QStringLiteral("text")).toString(), example.second.at(i)) << example.first.toStdString();
+        }
+    }
 }
 
 } // namespace

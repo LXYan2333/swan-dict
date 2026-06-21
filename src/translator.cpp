@@ -635,33 +635,59 @@ QVariantList Translator::partOfSpeechRows(const QString &text) const
     }
 
     static const QString posMarkers = QStringLiteral("(?:n|v|a|s|r|adj|adv|vi|vt|prep|pron|conj|interj|int|num|aux|abbr|art|pl|sing|suf|suff|pref|prefix|comb|phrase|phr|idiom|p|imp|un|na|alt|vbl|pla|st|superl|pp|obs|adjective|pret|dv|pn|vb|exclam|obj|quant|noun|compar|ads|ad|ind|col|ph|ing|verb|fem|imperative|pr|usu|indef|dat)");
+    static const QRegularExpression compoundInflectionLine(QStringLiteral(
+        "^(?:(?:p\\.\\s*pr\\.)\\s*(?:[&/]\\s*)?(?:vb\\.\\s*n\\.)|"
+        "(?:imp\\.)\\s*(?:&\\s*)?(?:p\\.\\s*pr\\.)?|"
+        "(?:p\\.\\s*pr\\.)|"
+        "(?:v\\.\\s*t\\.\\s*&\\s*i\\.))\\s+.+$"),
+        QRegularExpression::CaseInsensitiveOption);
     static const QRegularExpression markerBoundary(QStringLiteral("\\s+(?=(?:%1\\.\\s|\\[[^\\]]+\\]))").arg(posMarkers), QRegularExpression::CaseInsensitiveOption);
     static const QRegularExpression rowPattern(QStringLiteral("^(%1\\.)\\s*(.*)$").arg(posMarkers), QRegularExpression::CaseInsensitiveOption);
-    const QString preparedText = QString(normalizedText).replace(markerBoundary, QStringLiteral("\n"));
-    const QStringList lines = preparedText.split(u'\n', Qt::SkipEmptyParts);
-    for (QString line : lines) {
-        line = line.trimmed();
-        if (line.isEmpty()) {
+    const QStringList sourceLines = normalizedText.split(u'\n', Qt::SkipEmptyParts);
+    for (QString sourceLine : sourceLines) {
+        sourceLine = sourceLine.trimmed();
+        if (sourceLine.isEmpty()) {
             continue;
         }
 
-        const QRegularExpressionMatch match = rowPattern.match(line);
-        QString pos;
-        QString body = line;
-        if (match.hasMatch()) {
-            pos = match.captured(1).trimmed();
-            body = match.captured(2).trimmed();
+        if (compoundInflectionLine.match(sourceLine).hasMatch()) {
+            rows.push_back(QVariantMap {
+                {QStringLiteral("pos"), QString()},
+                {QStringLiteral("text"), sourceLine},
+                {QStringLiteral("isNote"), true},
+            });
+            continue;
         }
 
-        const QString domainTags = takeLeadingDomainTags(&body);
-        if (pos.isEmpty()) {
-            pos = domainTags;
-        }
+        const QString preparedText = QString(sourceLine).replace(markerBoundary, QStringLiteral("\n"));
+        const QStringList lines = preparedText.split(u'\n', Qt::SkipEmptyParts);
+        for (QString line : lines) {
+            line = line.trimmed();
+            if (line.isEmpty()) {
+                continue;
+            }
 
-        rows.push_back(QVariantMap {
-            {QStringLiteral("pos"), pos},
-            {QStringLiteral("text"), body},
-        });
+            const QRegularExpressionMatch match = rowPattern.match(line);
+            QString pos;
+            QString body = line;
+            if (match.hasMatch()) {
+                pos = match.captured(1).trimmed();
+                body = match.captured(2).trimmed();
+            }
+
+            const QString domainTags = takeLeadingDomainTags(&body);
+            if (pos.isEmpty()) {
+                pos = domainTags;
+            }
+            if (!pos.isEmpty() && body.isEmpty()) {
+                continue;
+            }
+
+            rows.push_back(QVariantMap {
+                {QStringLiteral("pos"), pos},
+                {QStringLiteral("text"), body},
+            });
+        }
     }
 
     return rows;

@@ -191,6 +191,7 @@ Item {
                 RowLayout {
                     Layout.fillWidth: true
                     visible: modelData.isWarning !== true
+                        && modelData.isNote !== true
                     spacing: Kirigami.Units.smallSpacing
 
                     PlasmaComponents.Label {
@@ -212,6 +213,14 @@ Item {
                         wrapMode: Text.WordWrap
                         textFormat: Text.PlainText
                     }
+                }
+
+                PlasmaComponents.Label {
+                    Layout.fillWidth: true
+                    visible: modelData.isNote === true
+                    text: modelData.text
+                    wrapMode: Text.WordWrap
+                    textFormat: Text.PlainText
                 }
             }
         }

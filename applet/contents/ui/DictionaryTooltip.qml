@@ -94,6 +94,7 @@ ColumnLayout {
                     RowLayout {
                         Layout.fillWidth: true
                         visible: modelData.isWarning !== true
+                            && modelData.isNote !== true
                         spacing: Kirigami.Units.smallSpacing
 
                         PlasmaComponents.Label {
@@ -115,6 +116,14 @@ ColumnLayout {
                             wrapMode: Text.Wrap
                             textFormat: Text.PlainText
                         }
+                    }
+
+                    PlasmaComponents.Label {
+                        Layout.fillWidth: true
+                        visible: modelData.isNote === true
+                        text: modelData.text
+                        wrapMode: Text.Wrap
+                        textFormat: Text.PlainText
                     }
 
                     Kirigami.Heading {
@@ -148,30 +157,44 @@ ColumnLayout {
         Repeater {
             model: root.dictEntry.definitionRows ?? []
 
-            RowLayout {
+            ColumnLayout {
                 required property var modelData
 
                 Layout.fillWidth: true
                 spacing: Kirigami.Units.smallSpacing
 
                 PlasmaComponents.Label {
-                    Layout.alignment: Qt.AlignLeft | Qt.AlignTop
-                    Layout.preferredWidth: Kirigami.Units.gridUnit * 1.6
-                    text: modelData.pos
-                    opacity: 0.5
-                    textFormat: Text.PlainText
-                }
-
-                Item {
-                    Layout.preferredWidth: Kirigami.Units.smallSpacing
-                }
-
-                PlasmaComponents.Label {
-                    Layout.alignment: Qt.AlignTop
                     Layout.fillWidth: true
+                    visible: modelData.isNote === true
                     text: modelData.text
                     wrapMode: Text.Wrap
                     textFormat: Text.PlainText
+                }
+
+                RowLayout {
+                    Layout.fillWidth: true
+                    visible: modelData.isNote !== true
+                    spacing: Kirigami.Units.smallSpacing
+
+                    PlasmaComponents.Label {
+                        Layout.alignment: Qt.AlignLeft | Qt.AlignTop
+                        Layout.preferredWidth: Kirigami.Units.gridUnit * 1.6
+                        text: modelData.pos
+                        opacity: 0.5
+                        textFormat: Text.PlainText
+                    }
+
+                    Item {
+                        Layout.preferredWidth: Kirigami.Units.smallSpacing
+                    }
+
+                    PlasmaComponents.Label {
+                        Layout.alignment: Qt.AlignTop
+                        Layout.fillWidth: true
+                        text: modelData.text
+                        wrapMode: Text.Wrap
+                        textFormat: Text.PlainText
+                    }
                 }
             }
         }
