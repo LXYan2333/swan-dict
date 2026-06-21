@@ -1,3 +1,7 @@
+swan-dict (1.2.1-1) unstable; urgency=medium
+
+  * Fix some weird explaination
+
 swan-dict (1.2.0-1) unstable; urgency=medium
 
   * Add translator lookup unit tests with ASan CI coverage.

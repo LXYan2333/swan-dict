@@ -14,7 +14,7 @@
         "Name": "Swan Dictionary",
         "Name[zh_CN]": "天鹅词典",
         "License": "GPL-2.0+",
-        "Version": "1.2.0",
+        "Version": "1.2.1",
         "Website": "https://github.com/LXYan2333/swan-dict",
         "BugReportUrl": "https://github.com/LXYan2333/swan-dict/issues"
     },

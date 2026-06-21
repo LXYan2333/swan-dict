@@ -1,7 +1,7 @@
 # Maintainer: LXYan <z00823823@outlook.com>
 
 pkgname=swan-dict
-pkgver=1.2.0
+pkgver=1.2.1
 pkgrel=1
 pkgdesc="KDE Plasma dictionary clock widget"
 arch=('x86_64')
