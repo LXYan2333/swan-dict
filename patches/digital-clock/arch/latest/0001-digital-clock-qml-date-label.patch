@@ -69,17 +69,17 @@
                  sizehelper.height: {
                      if (sizehelper.Plasmoid?.configuration.showDate) {
 @@ -351,7 +360,10 @@
-         }
      ]
  
+     acceptedButtons: Qt.LeftButton | (ApplicationIntegration.calendarInstalled ? Qt.MiddleButton : 0)
 -    onPressed: wasExpanded = root.expanded
 +    onPressed: {
 +        root.ignoreNextKWinMouseClick(500);
 +        wasExpanded = root.expanded;
 +    }
-     onClicked: root.expanded = !wasExpanded
-     onWheel: wheel => {
-         if (!Plasmoid.configuration.wheelChangesTimezone) {
+     onClicked: mouse => {
+         if (!mouse) {
+             root.expanded = !wasExpanded;
 @@ -452,6 +464,8 @@
              horizontalAlignment: Text.AlignHCenter
              verticalAlignment: Text.AlignVCenter
