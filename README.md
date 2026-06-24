@@ -267,7 +267,7 @@ python3 scripts/manage.py regenerate-patches
 ```text
 applets/common/contents/ui/DictionaryPopup.qml
 applets/common/contents/ui/configTranslation.qml
-applet-owned/config/config.qml
+applets/common/contents/config/config.qml
 ```
 
 ## 配置项

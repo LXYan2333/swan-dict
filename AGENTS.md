@@ -35,15 +35,11 @@ Project-owned QML files are kept in `applets/common/` and copied into each
 generated profile during sync:
 
 - `applets/common/metadata.json`
+- `applets/common/contents/config/config.qml`
 - `applets/common/contents/ui/DictionaryTooltip.qml`
 - `applets/common/contents/ui/DictionaryPopup.qml`
 - `applets/common/contents/ui/SwanDictController.qml`
 - `applets/common/contents/ui/configTranslation.qml`
-
-The applet configuration model is project-owned but copied into the generated
-applet tree during sync:
-
-- `applet-owned/config/config.qml`
 
 ## Patch Workflow
 
@@ -98,7 +94,7 @@ SWAN_DICT_PROFILE=fedora/44 SWAN_DICT_SYNC_DIGITAL_CLOCK_OVERWRITE=1 python3 scr
 After applying patches, the sync script copies:
 
 ```text
-applet-owned/config/config.qml
+applets/common/contents/config/config.qml
 ```
 
 to:

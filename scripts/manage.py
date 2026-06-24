@@ -374,8 +374,8 @@ def apply_patches(patch_dir: Path, target_applet: Path) -> None:
 
 def copy_owned_applet_files(target_applet: Path) -> None:
     target_contents = target_applet / "contents"
-    owned_config = REPO_ROOT / "applet-owned" / "config" / "config.qml"
     common_applet = REPO_ROOT / "applets" / "common"
+    owned_config = common_applet / "contents" / "config" / "config.qml"
 
     if owned_config.is_file():
         (target_contents / "config").mkdir(parents=True, exist_ok=True)

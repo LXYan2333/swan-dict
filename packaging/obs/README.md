@@ -9,7 +9,7 @@ system-installed plasmoid directory.
 The source package should include:
 
 - `applets/common/metadata.json`
-- `applet-owned/config/config.qml`
+- `applets/common/contents/config/config.qml`
 - owned QML files under `applets/common/contents/ui/`
 - copied Digital Clock QML/config files generated from distro source packages
 - `patches/digital-clock/<profile>/*.patch`
