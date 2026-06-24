@@ -80,28 +80,13 @@ Example repository block:
 ## Prepare Source For OBS
 
 Before generating the OBS source archive, make sure patches and generated
-fallback files are current.
+profile applet files are current.
 
-For normal generated Digital Clock files from the local system:
-
-```console
-SWAN_DICT_SYNC_DIGITAL_CLOCK_OVERWRITE=1 scripts/sync-digital-clock.sh
-```
-
-For the Arch fallback source included in the OBS tarball:
+For each profile:
 
 ```console
-SWAN_DICT_ARCH_PLASMA_WORKSPACE_SOURCE_DIR=/path/to/plasma-workspace \
-SWAN_DICT_PREPARE_ARCH_DIGITAL_CLOCK_FALLBACK_OVERWRITE=1 \
-scripts/prepare-arch-digital-clock-fallback.sh
-```
-
-If running on Arch, the script can fetch Arch's `plasma-workspace` source recipe
-itself:
-
-```console
-SWAN_DICT_PREPARE_ARCH_DIGITAL_CLOCK_FALLBACK_OVERWRITE=1 \
-scripts/prepare-arch-digital-clock-fallback.sh
+SWAN_DICT_PROFILE=debian/13 python3 scripts/manage.py prepare-source
+SWAN_DICT_PROFILE=debian/13 SWAN_DICT_SYNC_DIGITAL_CLOCK_OVERWRITE=1 python3 scripts/manage.py sync-digital-clock
 ```
 
 ## Generate Source Archives
@@ -229,7 +214,7 @@ packaging/obs/update-obs-sources.sh
 
 That script:
 
-- prepares the Arch Digital Clock fallback from KDE's Plasma Workspace source
+- prepares profile Digital Clock files from distro Plasma Workspace source packages
 - creates the generic source archive
 - creates Debian source artifacts with `dpkg-source`
 - copies the OBS recipe files
@@ -302,7 +287,7 @@ osc rebuild home:lxyan3 swan-dict
 2. Regenerate patches if generated Digital Clock files changed:
 
 ```console
-scripts/regenerate-patches.sh
+python3 scripts/manage.py regenerate-patches
 ```
 
 3. Build locally:

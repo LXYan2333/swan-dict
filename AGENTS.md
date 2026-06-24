@@ -8,34 +8,37 @@ opens a dictionary popup on click.
 
 The widget has three main parts:
 
-- Plasma applet package under `applet/`
+- Common project-owned applet files under `applets/common/`
+- Generated distro applet packages under `applets/<distro>/<version>/`
 - Native QML plugin under `src/`
 - ECDICT importer under `tools/import-ecdict/`
 - Optional KWin mouse-click helper effect under `kwin-helper/`
 
 ## Generated Digital Clock Files
 
-Most Digital Clock files under `applet/contents/` are generated from the
-system-installed upstream Digital Clock:
+Most Digital Clock files under `applets/<distro>/<version>/contents/` are
+generated from the upstream Digital Clock selected for that distro profile:
 
-- `applet/contents/config/`
-- `applet/contents/ui/CalendarView.qml`
-- `applet/contents/ui/DigitalClock.qml`
-- `applet/contents/ui/NoTimezoneWarning.qml`
-- `applet/contents/ui/Tooltip.qml`
-- `applet/contents/ui/configAppearance.qml`
-- `applet/contents/ui/configCalendar.qml`
-- `applet/contents/ui/configTimeZones.qml`
-- `applet/contents/ui/main.qml`
+- `applets/<distro>/<version>/contents/config/`
+- `applets/<distro>/<version>/contents/ui/CalendarView.qml`
+- `applets/<distro>/<version>/contents/ui/DigitalClock.qml`
+- `applets/<distro>/<version>/contents/ui/NoTimezoneWarning.qml`
+- `applets/<distro>/<version>/contents/ui/Tooltip.qml`
+- `applets/<distro>/<version>/contents/ui/configAppearance.qml`
+- `applets/<distro>/<version>/contents/ui/configCalendar.qml`
+- `applets/<distro>/<version>/contents/ui/configTimeZones.qml`
+- `applets/<distro>/<version>/contents/ui/main.qml`
 
 These generated files are ignored by git. Do not treat them as canonical source.
 
-Project-owned QML files are kept directly in the applet tree:
+Project-owned QML files are kept in `applets/common/` and copied into each
+generated profile during sync:
 
-- `applet/contents/ui/DictionaryTooltip.qml`
-- `applet/contents/ui/DictionaryPopup.qml`
-- `applet/contents/ui/SwanDictController.qml`
-- `applet/contents/ui/configTranslation.qml`
+- `applets/common/metadata.json`
+- `applets/common/contents/ui/DictionaryTooltip.qml`
+- `applets/common/contents/ui/DictionaryPopup.qml`
+- `applets/common/contents/ui/SwanDictController.qml`
+- `applets/common/contents/ui/configTranslation.qml`
 
 The applet configuration model is project-owned but copied into the generated
 applet tree during sync:
@@ -44,49 +47,53 @@ applet tree during sync:
 
 ## Patch Workflow
 
-Upstream-owned Digital Clock changes are stored as split patch files:
+Upstream-owned Digital Clock changes are stored as split patch files under the
+matching distro profile:
 
-- `patches/0001-digital-clock-qml-date-label.patch`
-- `patches/0002-tooltip-qml-dictionary-content.patch`
-- `patches/0003-main-qml-swan-dict-wiring.patch`
-- `patches/0005-main-xml-translation-settings.patch`
-- `patches/0006-config-appearance-digital-clock-i18n.patch`
-- `patches/0007-config-calendar-digital-clock-i18n.patch`
-- `patches/0008-config-time-zones-digital-clock-i18n.patch`
-- `patches/0009-calendar-view-digital-clock-i18n.patch`
-- `patches/0010-no-timezone-warning-digital-clock-i18n.patch`
+- `patches/digital-clock/debian/13/`
+- `patches/digital-clock/ubuntu/26.04/`
+- `patches/digital-clock/fedora/44/`
+- `patches/digital-clock/arch/latest/`
 
 Use:
 
-```sh
-scripts/regenerate-patches.sh
+```console
+python3 scripts/manage.py regenerate-patches
 ```
 
-to regenerate patch files from the current generated applet files.
+to regenerate patch files from the current generated applet files for the
+default `debian/13` profile. Set `SWAN_DICT_PROFILE`, for example:
 
-There is also a pre-commit hook template at:
-
-```text
-scripts/hooks/pre-commit
+```console
+SWAN_DICT_PROFILE=fedora/44 python3 scripts/manage.py regenerate-patches
 ```
-
-It runs patch regeneration and stages `patches/`.
 
 ## Syncing Digital Clock Files
 
-Use:
+Use the two-step source workflow:
 
-```sh
-SWAN_DICT_SYNC_DIGITAL_CLOCK_OVERWRITE=1 scripts/sync-digital-clock.sh
+```console
+SWAN_DICT_PROFILE=debian/13 python3 scripts/manage.py prepare-source
+SWAN_DICT_PROFILE=debian/13 SWAN_DICT_SYNC_DIGITAL_CLOCK_OVERWRITE=1 python3 scripts/manage.py sync-digital-clock
 ```
 
-to copy the system Digital Clock from:
+`prepare-source` must obtain the target distro's `plasma-workspace` source
+package. Do not copy Digital Clock QML from the system-installed plasmoid
+directory. If a distro has no supported source package workflow, the script
+must fail and tell the maintainer.
+
+Prepared source cache layout is profile-specific:
 
 ```text
-/usr/share/plasma/plasmoids/org.kde.plasma.digitalclock/contents
+.cache/plasma-workspace-source/<distro>/<version>/source
+.cache/plasma-workspace-source/<distro>/<version>/download
 ```
 
-and apply `patches/*.patch`.
+Use `SWAN_DICT_PROFILE` to sync another profile, for example:
+
+```console
+SWAN_DICT_PROFILE=fedora/44 SWAN_DICT_SYNC_DIGITAL_CLOCK_OVERWRITE=1 python3 scripts/manage.py sync-digital-clock
+```
 
 After applying patches, the sync script copies:
 
@@ -97,7 +104,7 @@ applet-owned/config/config.qml
 to:
 
 ```text
-applet/contents/config/config.qml
+applets/<distro>/<version>/contents/config/config.qml
 ```
 
 This avoids cross-distro breakage from upstream Digital Clock's dynamic calendar
@@ -107,25 +114,9 @@ Without `SWAN_DICT_SYNC_DIGITAL_CLOCK_OVERWRITE=1`, the sync script refuses to
 overwrite existing generated files. This is intentional to protect local dev
 edits.
 
-OBS/package builds should depend on the distro package that provides the system
-Digital Clock, usually `plasma-workspace`, and let CMake run the sync script in
-a clean source tree where generated files are absent.
-
-Arch is an exception: its `plasma-workspace` binary package does not ship
-copyable Digital Clock applet QML under
-`/usr/share/plasma/plasmoids/org.kde.plasma.digitalclock/contents`. For Arch
-OBS source archives, prepare the generated fallback files from Arch's own
-`plasma-workspace` source package recipe:
-
-```sh
-SWAN_DICT_PREPARE_ARCH_DIGITAL_CLOCK_FALLBACK_OVERWRITE=1 scripts/prepare-arch-digital-clock-fallback.sh
-```
-
-The script uses `pkgctl repo clone plasma-workspace`, `makepkg --nobuild
---nodeps`, then syncs from `applets/digital-clock/package/contents` and applies
-`patches/*.patch`. Do not add KDE `plasma-workspace` as a git submodule.
-On non-Arch systems, set `SWAN_DICT_ARCH_PLASMA_WORKSPACE_SOURCE_DIR` to an
-already unpacked matching `plasma-workspace` source tree.
+OBS/package source archives should include prepared generated applet files for
+each supported profile. Generate them from distro source packages before
+creating the source archive.
 
 ## Dictionary Database
 
@@ -144,20 +135,20 @@ tools/import-ecdict/import_ecdict.py
 The generated database is:
 
 ```text
-applet/contents/data/ecdict.sqlite
+applets/<distro>/<version>/contents/data/ecdict.sqlite
 ```
 
 It is ignored by git and should not be committed.
 
 CMake generates the database during build by default:
 
-```sh
+```console
 cmake --build build
 ```
 
 The CMake option is:
 
-```sh
+```console
 -DSWAN_DICT_GENERATE_DICTIONARY=ON
 ```
 
@@ -210,7 +201,7 @@ best-effort and silent when KWin or the helper is unavailable.
 
 The top-level CMake default builds the helper:
 
-```sh
+```console
 cmake -B build -S . -DSWAN_DICT_BUILD_KWIN_HELPER=ON
 ```
 
@@ -314,17 +305,24 @@ It should not include:
 
 - `build/`
 - generated `ecdict.sqlite`
-- copied upstream Digital Clock generated files
+- stale legacy `applet/` files
 
 Package builds should use the target distro's Plasma Workspace package so the
 copied Digital Clock QML matches the target distro's
 `org.kde.plasma.private.digitalclock`.
 
+Use `SWAN_DICT_PROFILE` for package-specific builds:
+
+- Debian 13: `debian/13`
+- Ubuntu 26.04: `ubuntu/26.04`
+- Fedora 44: `fedora/44`
+- Arch rolling: `arch/latest`
+
 ## Build And Test
 
 Normal local configure/build:
 
-```sh
+```console
 cmake -B build -S .
 cmake --build build
 ```
@@ -334,21 +332,21 @@ at the build module directory. Do not assume install is required for testing.
 
 Typical source-tree launch:
 
-```sh
-QML_IMPORT_PATH=build/src plasmoidviewer -a applet
+```console
+QML_IMPORT_PATH=build/src plasmoidviewer -a applets/debian/13
 ```
 
 When changing C++:
 
-```sh
+```console
 cmake --build build
 ```
 
 When changing generated upstream-owned QML/config files and the change should
 persist:
 
-```sh
-scripts/regenerate-patches.sh
+```console
+python3 scripts/manage.py regenerate-patches
 ```
 
 When changing only project-owned files such as `DictionaryTooltip.qml`,

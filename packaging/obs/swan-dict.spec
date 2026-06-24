@@ -5,6 +5,7 @@ Summary:        KDE Plasma dictionary clock widget
 License:        GPL-2.0-or-later
 URL:            https://github.com/LXYan2333/swan-dict
 Source0:        %{name}-%{version}.tar.xz
+%global swan_dict_profile %{?swan_dict_profile}%{!?swan_dict_profile:fedora/44}
 
 BuildRequires:  cmake
 BuildRequires:  extra-cmake-modules
@@ -47,8 +48,9 @@ selection and opens a full dictionary popup on click.
 %autosetup -p1
 
 %build
-SWAN_DICT_SYNC_DIGITAL_CLOCK_OVERWRITE=1 %cmake -G Ninja \
+%cmake -G Ninja \
     -DBUILD_TESTING=OFF \
+    -DSWAN_DICT_PROFILE=%{swan_dict_profile} \
     -DSWAN_DICT_GENERATE_DICTIONARY=ON \
     -DSWAN_DICT_BUILD_KWIN_HELPER=ON
 %cmake_build

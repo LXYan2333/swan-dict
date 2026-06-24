@@ -1,0 +1,29 @@
+--- upstream/contents/ui/CalendarView.qml
++++ current/contents/ui/CalendarView.qml
+@@ -34,6 +34,26 @@
+ PlasmaExtras.Representation {
+     id: calendar
+ 
++    readonly property string upstreamTranslationDomain: "plasma_applet_org.kde.plasma.digitalclock"
++    function i18n(message, arg1, arg2) {
++        if (arguments.length === 3) {
++            return i18nd(upstreamTranslationDomain, message, arg1, arg2);
++        }
++        if (arguments.length === 2) {
++            return i18nd(upstreamTranslationDomain, message, arg1);
++        }
++        return i18nd(upstreamTranslationDomain, message);
++    }
++    function i18nc(context, message, arg1, arg2) {
++        if (arguments.length === 4) {
++            return i18ndc(upstreamTranslationDomain, context, message, arg1, arg2);
++        }
++        if (arguments.length === 3) {
++            return i18ndc(upstreamTranslationDomain, context, message, arg1);
++        }
++        return i18ndc(upstreamTranslationDomain, context, message);
++    }
++
+     readonly property var appletInterface: root
+ 
+     Kirigami.Theme.colorSet: Kirigami.Theme.Window

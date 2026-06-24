@@ -2,6 +2,8 @@ swan-dict (1.2.1-1) unstable; urgency=medium
 
   * Fix some weird explaination
 
+ -- LXYan <z00823823@outlook.com>  Wed, 24 Jun 2026 13:45:00 +0800
+
 swan-dict (1.2.0-1) unstable; urgency=medium
 
   * Add translator lookup unit tests with ASan CI coverage.

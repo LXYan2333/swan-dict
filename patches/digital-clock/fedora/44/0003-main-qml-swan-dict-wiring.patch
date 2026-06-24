@@ -1,0 +1,118 @@
+--- upstream/contents/ui/main.qml
++++ current/contents/ui/main.qml
+@@ -21,12 +21,49 @@
+ PlasmoidItem {
+     id: root
+ 
++    readonly property string upstreamTranslationDomain: "plasma_applet_org.kde.plasma.digitalclock"
++    function i18n(message, arg1, arg2) {
++        if (arguments.length === 3) {
++            return i18nd(upstreamTranslationDomain, message, arg1, arg2);
++        }
++        if (arguments.length === 2) {
++            return i18nd(upstreamTranslationDomain, message, arg1);
++        }
++        return i18nd(upstreamTranslationDomain, message);
++    }
++    function i18nc(context, message, arg1, arg2) {
++        if (arguments.length === 4) {
++            return i18ndc(upstreamTranslationDomain, context, message, arg1, arg2);
++        }
++        if (arguments.length === 3) {
++            return i18ndc(upstreamTranslationDomain, context, message, arg1);
++        }
++        return i18ndc(upstreamTranslationDomain, context, message);
++    }
++
+     width: Kirigami.Units.gridUnit * 10
+     height: Kirigami.Units.gridUnit * 4
+ 
+     Plasmoid.backgroundHints: PlasmaCore.Types.ShadowBackground | PlasmaCore.Types.ConfigurableBackground
+ 
++    TapHandler {
++        acceptedButtons: Qt.LeftButton
++        onPressedChanged: {
++            if (pressed) {
++                swanDict.ignoreNextKWinMouseClick(1000);
++            }
++        }
++    }
++
+     readonly property string dateFormatString: setDateFormatString()
++    readonly property var dictEntry: swanDict.dictEntry
++    readonly property string sentenceTranslation: swanDict.sentenceTranslation
++    readonly property string sentenceTranslationError: swanDict.sentenceTranslationError
++    readonly property bool sentenceTranslationBusy: swanDict.sentenceTranslationBusy
++    readonly property bool sentenceTranslationRequested: swanDict.sentenceTranslationRequested
++    readonly property bool hasDictEntry: swanDict.hasDictEntry
++    readonly property bool canTranslateSelectedSentence: swanDict.canTranslateSelectedSentence
++
+     readonly property var currentTime: currentClock.dateTime
+     readonly property string currentTimeZone: currentClock.timeZone
+ 
+@@ -88,7 +125,37 @@
+ 
+     preferredRepresentation: compactRepresentation
+ 
+-    fullRepresentation: CalendarView { }
++    fullRepresentation: Loader {
++        readonly property int dictionaryPopupWidth: Kirigami.Units.gridUnit * 22
++        readonly property int dictionaryPopupHeight: Kirigami.Units.gridUnit * 18
++
++        Layout.minimumWidth: root.hasDictEntry ? dictionaryPopupWidth : (item ? item.Layout.minimumWidth : 0)
++        Layout.minimumHeight: root.hasDictEntry ? dictionaryPopupHeight : (item ? item.Layout.minimumHeight : 0)
++        Layout.preferredWidth: root.hasDictEntry ? dictionaryPopupWidth : (item ? item.Layout.preferredWidth : 0)
++        Layout.preferredHeight: root.hasDictEntry ? dictionaryPopupHeight : (item ? item.Layout.preferredHeight : 0)
++        Layout.maximumWidth: root.hasDictEntry ? dictionaryPopupWidth : -1
++        Layout.maximumHeight: root.hasDictEntry ? dictionaryPopupHeight : -1
++
++        sourceComponent: root.hasDictEntry ? dictionaryPopupComponent : calendarPopupComponent
++    }
++
++    Component {
++        id: calendarPopupComponent
++        CalendarView { }
++    }
++
++    Component {
++        id: dictionaryPopupComponent
++        DictionaryPopup {
++            dictEntry: root.dictEntry
++            sentenceTranslation: root.sentenceTranslation
++            sentenceTranslationBusy: root.sentenceTranslationBusy
++            sentenceTranslationError: root.sentenceTranslationError
++            sentenceTranslationAvailable: root.canTranslateSelectedSentence
++            sentenceTranslationRequested: root.sentenceTranslationRequested
++            onRequestSentenceTranslation: swanDict.requestSentenceTranslation()
++        }
++    }
+ 
+     compactRepresentation: Loader {
+         id: conditionalLoader
+@@ -140,10 +207,26 @@
+         function onSelectedTimeZonesChanged() {
+             root.initTimeZones();
+         }
++
++        function onStartKWinMouseHelperChanged() {
++            if (Plasmoid.configuration.startKWinMouseHelper) {
++                swanDict.startKWinMouseHelper();
++            }
++        }
+     }
+ 
+     hideOnWindowDeactivate: !Plasmoid.configuration.pin
+ 
++    SwanDictController {
++        id: swanDict
++        configuration: Plasmoid.configuration
++        expanded: root.expanded
++    }
++
++    function ignoreNextKWinMouseClick(timeoutMs: int) {
++        swanDict.ignoreNextKWinMouseClick(timeoutMs);
++    }
++
+     function setDateFormatString() {
+         // remove "dddd" from the locale format string
+         // /all/ locales in LongFormat have "dddd" either
