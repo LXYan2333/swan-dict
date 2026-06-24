@@ -68,30 +68,6 @@ prepare_source_tree() {
     echo "${source_dir}"
 }
 
-enable_deb_source_repositories() {
-    if compgen -G "/etc/apt/sources.list.d/*.sources" >/dev/null; then
-        sed -i -E '/^Types:/ { /(^|[[:space:]])deb-src($|[[:space:]])/! s/$/ deb-src/ }' /etc/apt/sources.list.d/*.sources
-    fi
-    if [[ -f /etc/apt/sources.list ]]; then
-        sed -i -E 's/^# deb-src /deb-src /' /etc/apt/sources.list
-        if ! grep -q -E '^deb-src[[:space:]]+' /etc/apt/sources.list; then
-            local tmp_sources
-            tmp_sources="$(mktemp)"
-            awk '
-                /^deb / {
-                    source = $0
-                    sub(/^deb /, "deb-src ", source)
-                    if (!seen[source]++) {
-                        print source
-                    }
-                }
-            ' /etc/apt/sources.list > "${tmp_sources}"
-            cat "${tmp_sources}" >> /etc/apt/sources.list
-            rm -f "${tmp_sources}"
-        fi
-    fi
-}
-
 create_source_tarball() {
     local output="$1"
     local tmp_dir
@@ -103,7 +79,6 @@ create_source_tarball() {
 
 install_deb_dependencies() {
     export DEBIAN_FRONTEND=noninteractive
-    enable_deb_source_repositories
     apt-get update
     apt-get install -y --no-install-recommends ca-certificates curl git tar xz-utils
 
