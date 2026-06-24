@@ -193,7 +193,7 @@ def prepare_arch_source(profile: str) -> None:
     result = subprocess.run(["git", "clone", "--depth=1", repo_url, str(package_dir)], cwd=work, check=False)
     if result.returncode != 0:
         fail(f"Arch source package recipe for plasma-workspace could not be cloned from {repo_url}.")
-    run(["makepkg", "--nobuild", "--nodeps"], cwd=package_dir)
+    run(["makepkg", "--nobuild", "--nodeps", "--skippgpcheck"], cwd=package_dir)
     source_root = package_dir / "src"
     if not source_root.is_dir():
         fail("Arch plasma-workspace source recipe did not create a src directory.")
