@@ -193,7 +193,18 @@ build_arch_package() {
         wayland-protocols \
         xz
 
-    prepare_digital_clock_from_source_package
+    id -u builder >/dev/null 2>&1 || useradd -m builder
+    chown -R builder:builder "${repo_root}"
+
+    runuser -u builder -- env \
+        SWAN_DICT_PROFILE="${profile}" \
+        SWAN_DICT_PREPARE_SOURCE_OVERWRITE=1 \
+        python3 "${repo_root}/scripts/manage.py" prepare-source
+
+    runuser -u builder -- env \
+        SWAN_DICT_PROFILE="${profile}" \
+        SWAN_DICT_SYNC_DIGITAL_CLOCK_OVERWRITE=1 \
+        python3 "${repo_root}/scripts/manage.py" sync-digital-clock
 
     local build_dir="/tmp/swan-dict-arch"
     rm -rf "${build_dir}"
@@ -201,7 +212,6 @@ build_arch_package() {
     create_source_tarball "${build_dir}/swan-dict-${version}.tar.xz"
     cp "${repo_root}/packaging/obs/PKGBUILD" "${build_dir}/"
 
-    useradd -m builder
     chown -R builder:builder "${build_dir}"
     (
         cd "${build_dir}"
