@@ -1,7 +1,7 @@
 --- upstream/contents/ui/configCalendar.qml
 +++ current/contents/ui/configCalendar.qml
 @@ -19,6 +19,26 @@
- KCMUtils.SimpleKCM {
+ KCMUtils.ScrollViewKCM {
      id: calendarPage
  
 +    readonly property string upstreamTranslationDomain: "plasma_applet_org.kde.plasma.digitalclock"

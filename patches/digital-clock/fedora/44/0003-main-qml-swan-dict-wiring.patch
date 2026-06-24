@@ -1,6 +1,6 @@
 --- upstream/contents/ui/main.qml
 +++ current/contents/ui/main.qml
-@@ -21,12 +21,48 @@
+@@ -21,12 +21,49 @@
  PlasmoidItem {
      id: root
  
@@ -46,10 +46,11 @@
 +    readonly property bool sentenceTranslationRequested: swanDict.sentenceTranslationRequested
 +    readonly property bool hasDictEntry: swanDict.hasDictEntry
 +    readonly property bool canTranslateSelectedSentence: swanDict.canTranslateSelectedSentence
++
+     readonly property var currentTime: currentClock.dateTime
+     readonly property string currentTimeZone: currentClock.timeZone
  
-     readonly property date currentDateTimeInSelectedTimeZone: {
-         const data = dataSource.data[Plasmoid.configuration.lastSelectedTimezone];
-@@ -128,7 +164,37 @@
+@@ -88,7 +125,37 @@
  
      preferredRepresentation: compactRepresentation
  
@@ -88,7 +89,7 @@
  
      compactRepresentation: Loader {
          id: conditionalLoader
-@@ -180,6 +246,12 @@
+@@ -140,10 +207,26 @@
          function onSelectedTimeZonesChanged() {
              root.initTimeZones();
          }
@@ -101,9 +102,6 @@
      }
  
      hideOnWindowDeactivate: !Plasmoid.configuration.pin
-@@ -201,6 +273,16 @@
-         }
-     }
  
 +    SwanDictController {
 +        id: swanDict

@@ -182,16 +182,17 @@ def prepare_fedora_source(profile: str) -> None:
 
 
 def prepare_arch_source(profile: str) -> None:
-    require_command("pkgctl", "Arch source package workflow requires devtools/pkgctl.")
+    require_command("git", "Arch source package workflow requires git.")
     require_command("makepkg", "Arch source package workflow requires makepkg.")
     work = download_work_root(profile)
     work.mkdir(parents=True, exist_ok=True)
     package_dir = work / "plasma-workspace"
     if package_dir.exists():
         shutil.rmtree(package_dir)
-    result = subprocess.run(["pkgctl", "repo", "clone", "plasma-workspace"], cwd=work, check=False)
+    repo_url = os.environ.get("SWAN_DICT_ARCH_PACKAGE_REPO_URL", "https://gitlab.archlinux.org/archlinux/packaging/packages/plasma-workspace.git")
+    result = subprocess.run(["git", "clone", "--depth=1", repo_url, str(package_dir)], cwd=work, check=False)
     if result.returncode != 0:
-        fail("Arch source package recipe for plasma-workspace could not be cloned. Install devtools/pkgctl and retry on Arch.")
+        fail(f"Arch source package recipe for plasma-workspace could not be cloned from {repo_url}.")
     run(["makepkg", "--nobuild", "--nodeps"], cwd=package_dir)
     source_root = package_dir / "src"
     if not source_root.is_dir():

@@ -1,6 +1,6 @@
 --- upstream/contents/ui/CalendarView.qml
 +++ current/contents/ui/CalendarView.qml
-@@ -33,6 +33,26 @@
+@@ -34,6 +34,26 @@
  PlasmaExtras.Representation {
      id: calendar
  
