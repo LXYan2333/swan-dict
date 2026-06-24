@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 import argparse
 import os
+import re
 import shutil
 import subprocess
 import sys
@@ -131,8 +132,70 @@ def extract_tarball(archive: Path, target: Path) -> Path:
     fail(f"Unable to identify extracted Plasma Workspace source directory from: {archive}")
 
 
+def enable_deb_source_repositories() -> None:
+    changed = False
+
+    for source_file_path in Path("/etc/apt/sources.list.d").glob("*.sources"):
+        try:
+            content = source_file_path.read_text()
+        except OSError:
+            continue
+
+        def add_deb_src(match: re.Match[str]) -> str:
+            nonlocal changed
+            types = match.group(1).split()
+            if "deb" in types and "deb-src" not in types:
+                changed = True
+                types.append("deb-src")
+            return f"Types: {' '.join(types)}"
+
+        updated = re.sub(r"^Types:\s*(.+)$", add_deb_src, content, flags=re.MULTILINE)
+        if updated != content:
+            source_file_path.write_text(updated)
+
+    legacy_sources = Path("/etc/apt/sources.list")
+    if legacy_sources.exists():
+        legacy_changed = False
+        try:
+            lines = legacy_sources.read_text().splitlines()
+        except OSError:
+            lines = []
+
+        updated_lines: list[str] = []
+        has_deb_src = False
+        deb_lines: list[str] = []
+        for line in lines:
+            if line.startswith("# deb-src "):
+                uncommented = line[2:]
+                updated_lines.append(uncommented)
+                has_deb_src = True
+                legacy_changed = True
+            else:
+                updated_lines.append(line)
+                if re.match(r"^deb-src\s+", line):
+                    has_deb_src = True
+                elif re.match(r"^deb\s+", line):
+                    deb_lines.append(re.sub(r"^deb\s+", "deb-src ", line, count=1))
+
+        if deb_lines and not has_deb_src:
+            existing = set(updated_lines)
+            for line in deb_lines:
+                if line not in existing:
+                    updated_lines.append(line)
+                    existing.add(line)
+                    legacy_changed = True
+
+        if legacy_changed:
+            legacy_sources.write_text("\n".join(updated_lines) + "\n")
+            changed = True
+
+    if changed:
+        run(["apt-get", "update"])
+
+
 def prepare_deb_source(profile: str, distro: str) -> None:
     require_command("apt-get", f"{distro} source package workflow requires apt-get.")
+    enable_deb_source_repositories()
     work = download_work_root(profile)
     shutil.rmtree(work, ignore_errors=True)
     work.mkdir(parents=True, exist_ok=True)
