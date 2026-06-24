@@ -1,0 +1,14 @@
+--- upstream/contents/ui/NoTimezoneWarning.qml
++++ current/contents/ui/NoTimezoneWarning.qml
+@@ -16,6 +16,11 @@
+ MouseArea {
+     id: root
+ 
++    readonly property string upstreamTranslationDomain: "plasma_applet_org.kde.plasma.digitalclock"
++    function i18nc(context, message) {
++        return i18ndc(upstreamTranslationDomain, context, message);
++    }
++
+     Layout.minimumWidth: mainLayout.implicitWidth
+     Layout.minimumHeight: mainLayout.implicitHeight
+ 

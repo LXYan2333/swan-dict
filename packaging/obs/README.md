@@ -1,27 +1,19 @@
 # OBS Packaging Notes
 
-This project should use each distribution's own Plasma Digital Clock files when
-the distribution ships copyable QML applet sources.
-
-Arch currently ships the Digital Clock as a Plasma applet plugin and does not
-provide `/usr/share/plasma/plasmoids/org.kde.plasma.digitalclock/contents`.
-For that target, prepare the fallback files from Arch's `plasma-workspace`
-source package recipe and include those generated Digital Clock QML/config
-files in the OBS source archive.
+This project prepares Digital Clock QML/config from each distribution's own
+`plasma-workspace` source package. It must not copy Digital Clock files from the
+system-installed plasmoid directory.
 
 ## Source Policy
 
 The source package should include:
 
-- `applet/metadata.json`
+- `applets/common/metadata.json`
 - `applet-owned/config/config.qml`
-- owned QML files, especially `applet/contents/ui/DictionaryPopup.qml` and
-  `applet/contents/ui/configTranslation.qml`
-- copied Digital Clock QML/config files when building targets that do not ship
-  copyable Digital Clock applet sources, currently Arch. Generate these files
-  with `scripts/prepare-arch-digital-clock-fallback.sh`.
-- `patches/*.patch`
-- `scripts/sync-digital-clock.sh`
+- owned QML files under `applets/common/contents/ui/`
+- copied Digital Clock QML/config files generated from distro source packages
+- `patches/digital-clock/<profile>/*.patch`
+- `scripts/manage.py`
 - `src/`
 - `po/`
 - `tools/import-ecdict/import_ecdict.py`
@@ -30,53 +22,20 @@ The source package should include:
 The source package should not include:
 
 - `build/`
-- `applet/contents/data/ecdict.sqlite`
+- `applets/*/*/contents/data/ecdict.sqlite`
 
-During CMake configure, `scripts/sync-digital-clock.sh` copies the Digital Clock
-from the build root's installed Plasma package when generated files are absent.
-This keeps `org.kde.plasma.private.digitalclock` and the copied QML in sync with
-the target distribution.
-
-For Debian/Fedora builds where the distro does ship the Digital Clock source,
-set this environment variable during configure so the distro source replaces
-the fallback files:
+Before creating an OBS source archive, refresh every supported profile:
 
 ```console
-SWAN_DICT_SYNC_DIGITAL_CLOCK_OVERWRITE=1
+SWAN_DICT_PROFILE=debian/13 python3 scripts/manage.py prepare-source
+SWAN_DICT_PROFILE=debian/13 SWAN_DICT_SYNC_DIGITAL_CLOCK_OVERWRITE=1 python3 scripts/manage.py sync-digital-clock
 ```
 
-Do not set it for Arch unless Arch starts shipping the copyable Digital Clock
-source path.
-
-To refresh the Arch fallback from Arch's current `plasma-workspace` source
-package:
-
-```console
-SWAN_DICT_PREPARE_ARCH_DIGITAL_CLOCK_FALLBACK_OVERWRITE=1 scripts/prepare-arch-digital-clock-fallback.sh
-```
-
-The script uses `pkgctl repo clone plasma-workspace` and `makepkg --nobuild
---nodeps` under `.cache/arch-plasma-workspace/`, finds
-`applets/digital-clock/package/contents`, then applies this project's split
-patches through `scripts/sync-digital-clock.sh`.
-
-On non-Arch systems, you can provide an already unpacked matching
-`plasma-workspace` source tree instead:
-
-```console
-SWAN_DICT_ARCH_PLASMA_WORKSPACE_SOURCE_DIR=/path/to/plasma-workspace \
-SWAN_DICT_PREPARE_ARCH_DIGITAL_CLOCK_FALLBACK_OVERWRITE=1 \
-    scripts/prepare-arch-digital-clock-fallback.sh
-```
-
-Required local tools for that refresh:
-
-- `pkgctl` from Arch `devtools`
-- `makepkg`
-- normal source download access for the Arch `plasma-workspace` PKGBUILD
+Repeat for `ubuntu/26.04`, `fedora/44`, and `arch/latest`. If a distro source
+package cannot be obtained, the manager stops and reports the unsupported path.
 
 During CMake build, `tools/import-ecdict/import_ecdict.py` generates
-`applet/contents/data/ecdict.sqlite` from `third_party/ECDICT/ecdict.csv`.
+`applets/<profile>/contents/data/ecdict.sqlite` from `third_party/ECDICT/ecdict.csv`.
 
 ## Required Build Dependencies
 
@@ -93,8 +52,7 @@ Common requirements:
 - KF6 Package
 - Wayland client development files
 - wayland-protocols
-- Plasma Workspace package that owns
-  `/usr/share/plasma/plasmoids/org.kde.plasma.digitalclock`
+- Plasma Workspace source package access for the target profile
 
 Runtime requirements:
 
@@ -227,7 +185,7 @@ Arch runtime dependencies:
    install source-service packages such as `obs-service-tar` in target
    repositories, which breaks Debian/Arch/Fedora builds.
 5. Ensure each recipe runs the normal CMake configure/build/install steps.
-6. Do not call `scripts/regenerate-patches.sh` in OBS. Patch regeneration is a
+6. Do not call `python3 scripts/manage.py regenerate-patches` in OBS. Patch regeneration is a
    maintainer/dev action, not a package build action.
 
 The recipes build and install the KWin helper by default:

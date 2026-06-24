@@ -221,32 +221,20 @@ $ plasmashell --replace
 
 ## Digital Clock 同步机制
 
-本项目不直接维护完整的 KDE Digital Clock 源码副本。
+本项目不从系统已安装的小组件目录复制 Digital Clock QML。维护流程分两步：
 
-系统安装的 Digital Clock 通常位于：
+```console
+SWAN_DICT_PROFILE=debian/13 python3 scripts/manage.py prepare-source
+SWAN_DICT_PROFILE=debian/13 SWAN_DICT_SYNC_DIGITAL_CLOCK_OVERWRITE=1 \
+python3 scripts/manage.py sync-digital-clock
+```
+
+`prepare-source` 会使用当前 profile 对应发行版的 `plasma-workspace` 源码包。
+如果发行版没有可用源码包，脚本会停止并提示原因，不会回退到系统安装目录。
+源码缓存路径包含发行版和版本，例如：
 
 ```text
-/usr/share/plasma/plasmoids/org.kde.plasma.digitalclock/contents
-```
-
-同步脚本：
-
-```console
-scripts/sync-digital-clock.sh
-```
-
-默认不会覆盖已有生成文件。需要显式设置环境变量才会覆盖：
-
-```console
-SWAN_DICT_SYNC_DIGITAL_CLOCK_OVERWRITE=1 scripts/sync-digital-clock.sh
-```
-
-也可以指定其它 Digital Clock 源码位置：
-
-```console
-SWAN_DICT_DIGITAL_CLOCK_SOURCE=/path/to/digital-clock/contents \
-SWAN_DICT_SYNC_DIGITAL_CLOCK_OVERWRITE=1 \
-scripts/sync-digital-clock.sh
+.cache/plasma-workspace-source/debian/13/source
 ```
 
 这样做是为了让本项目复制目标发行版自己的 Digital Clock QML，从而尽量匹配：
@@ -271,14 +259,14 @@ patches/0005-main-xml-translation-settings.patch
 修改以下生成文件后，需要重新生成补丁：
 
 ```console
-scripts/regenerate-patches.sh
+python3 scripts/manage.py regenerate-patches
 ```
 
 项目自有 QML 文件直接提交，不需要生成补丁：
 
 ```text
-applet/contents/ui/DictionaryPopup.qml
-applet/contents/ui/configTranslation.qml
+applets/common/contents/ui/DictionaryPopup.qml
+applets/common/contents/ui/configTranslation.qml
 applet-owned/config/config.qml
 ```
 
@@ -320,10 +308,10 @@ packaging/obs/README.md
 
 推荐策略：
 
-- OBS 构建环境安装目标发行版自己的 `plasma-workspace`。
-- 构建时从系统 Digital Clock 复制 QML 并应用本项目补丁。
+- 先用目标发行版自己的 `plasma-workspace` 源码包生成 Digital Clock QML。
+- 构建时使用已经生成好的 profile applet 文件。
 - 构建时从 `third_party/ECDICT/ecdict.csv` 生成 SQLite 数据库。
-- source package 不包含 `build/` 和 `applet/contents/data/ecdict.sqlite`。
+- source package 不包含 `build/` 和 `applets/*/*/contents/data/ecdict.sqlite`。
 
 ## 许可证
 

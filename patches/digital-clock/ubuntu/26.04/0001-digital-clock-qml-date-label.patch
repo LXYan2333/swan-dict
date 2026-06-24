@@ -1,0 +1,101 @@
+--- upstream/contents/ui/DigitalClock.qml
++++ current/contents/ui/DigitalClock.qml
+@@ -24,6 +24,8 @@
+ 
+     property string timeFormat
+     property string timeFormatWithSeconds
++    readonly property int fixedDateWidth: Math.max(0, Plasmoid.configuration.dateReplacementFixedWidth)
++    readonly property int effectiveDateWidth: fixedDateWidth > 0 ? fixedDateWidth : dateLabel.paintedWidth
+ 
+     // This is quite convoluted in Qt 6:
+     // Qt.formatDate with locale only accepts Locale.FormatType as format type,
+@@ -88,6 +90,13 @@
+     }
+ 
+     Connections {
++        target: root
++        function onDictEntryChanged() {
++            main.setupLabels();
++        }
++    }
++
++    Connections {
+         target: Plasmoid.configuration
+         function onSelectedTimeZonesChanged() {
+             // If the currently selected time zone was removed,
+@@ -164,7 +173,7 @@
+ 
+                 height: timeLabel.height + (Plasmoid.configuration.showDate || timeZoneLabel.visible ? 0.8 * timeLabel.height : 0)
+                 width: Math.max(timeLabel.width + (Plasmoid.configuration.showDate ? timeZoneLabel.paintedWidth : 0),
+-                                timeZoneLabel.paintedWidth, dateLabel.paintedWidth) + Kirigami.Units.largeSpacing
++                                timeZoneLabel.paintedWidth, dateLabel.width) + Kirigami.Units.largeSpacing
+             }
+ 
+             PropertyChanges {
+@@ -201,7 +210,7 @@
+                 target: dateLabel
+ 
+                 height: 0.8 * timeLabel.height
+-                width: dateLabel.paintedWidth
++                width: main.effectiveDateWidth
+                 verticalAlignment: Text.AlignVCenter
+ 
+                 font.pixelSize: dateLabel.height
+@@ -262,7 +271,7 @@
+                 target: dateLabel
+ 
+                 height: timeLabel.height
+-                width: dateLabel.paintedWidth
++                width: main.effectiveDateWidth
+ 
+                 // to debug font sizing issues
+                 // onHeightChanged: () => console.log("height", timeMetrics.font.pixelSize, dateLabel.height)
+@@ -369,7 +378,7 @@
+                 // between slightly bigger than the default font (1.4 times) and a bit smaller than the time font
+                 font.pixelSize: Math.min(0.7 * timeLabel.height, Kirigami.Theme.defaultFont.pixelSize * 1.4)
+                 elide: Text.ElideRight
+-                wrapMode: Text.WordWrap
++                wrapMode: root.hasDictEntry ? Text.NoWrap : Text.WordWrap
+             }
+ 
+             AnchorChanges {
+@@ -443,7 +452,7 @@
+ 
+                 fontSizeMode: Text.Fit
+                 minimumPixelSize: 1
+-                wrapMode: Text.WordWrap
++                wrapMode: root.hasDictEntry ? Text.NoWrap : Text.WordWrap
+             }
+ 
+             AnchorChanges {
+@@ -475,7 +484,10 @@
+         }
+     ]
+ 
+-    onPressed: wasExpanded = root.expanded
++    onPressed: {
++        root.ignoreNextKWinMouseClick(500);
++        wasExpanded = root.expanded;
++    }
+     onClicked: root.expanded = !wasExpanded
+     onWheel: wheel => {
+         if (!Plasmoid.configuration.wheelChangesTimezone) {
+@@ -596,6 +608,8 @@
+             horizontalAlignment: Text.AlignHCenter
+             verticalAlignment: Text.AlignVCenter
+             textFormat: Text.PlainText
++            elide: Text.ElideRight
++            wrapMode: Text.NoWrap
+         }
+     }
+     /*
+@@ -720,7 +734,8 @@
+         timeZoneLabel.text = timezoneString;
+ 
+         if (Plasmoid.configuration.showDate) {
+-            dateLabel.text = dateFormatter(getCurrentTime());
++            const summary = root.dictEntry?.summary ?? "";
++            dateLabel.text = summary.length > 0 ? summary : dateFormatter(getCurrentTime());
+         } else {
+             // clear it so it doesn't take space in the layout
+             dateLabel.text = "";

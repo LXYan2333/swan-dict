@@ -91,11 +91,10 @@ third_party/wl-clipboard-protocols/
 项目复制的 wlr data control protocol XML。用于生成 Wayland client protocol 代码。
 
 ```text
-patches/
-patches/arch-plasma-6.6.5/
+patches/digital-clock/<profile>/
 ```
 
-对上游 Digital Clock 生成文件的补丁。普通发行版使用 `patches/`。Arch OBS fallback 使用 `patches/arch-plasma-6.6.5/`。
+对上游 Digital Clock 生成文件的补丁。每个发行版 profile 有自己的补丁目录。
 
 ```text
 scripts/
@@ -103,9 +102,9 @@ scripts/
 
 同步和维护脚本：
 
-- `sync-digital-clock.sh`：从系统 Digital Clock 复制 QML/config 并应用补丁。
-- `regenerate-patches.sh`：从当前 applet 生成文件反向生成补丁。
-- `prepare-arch-digital-clock-fallback.sh`：为 Arch OBS source archive 准备 Digital Clock fallback。
+- `manage.py prepare-source`：下载并解包当前 profile 对应发行版的 `plasma-workspace` 源码包。
+- `manage.py sync-digital-clock`：从已准备好的源码包复制 Digital Clock QML/config 并应用补丁。
+- `manage.py regenerate-patches`：从当前 applet 生成文件反向生成补丁。
 
 ```text
 packaging/
@@ -138,7 +137,7 @@ OBS、Debian、RPM、Arch 打包相关文件。
 
 开发原则：
 
-- 修改上游 Digital Clock 生成文件后，需要运行 `scripts/regenerate-patches.sh`。
+- 修改上游 Digital Clock 生成文件后，需要运行 `python3 scripts/manage.py regenerate-patches`。
 - 修改项目自有 QML 文件，不需要重新生成补丁。
 - 尽量把复杂词典 UI 放在项目自有 QML 文件中，让补丁只负责接入点。
 
@@ -149,17 +148,19 @@ OBS、Debian、RPM、Arch 打包相关文件。
 构建配置阶段，顶层 `CMakeLists.txt` 会运行：
 
 ```text
-scripts/sync-digital-clock.sh
+python3 scripts/manage.py sync-digital-clock
 ```
 
 数据流：
 
 ```text
-系统 Digital Clock contents
-  -> scripts/sync-digital-clock.sh
-  -> applet/contents/config/
-  -> applet/contents/ui/*.qml
-  -> patches/*.patch
+发行版 plasma-workspace 源码包
+  -> python3 scripts/manage.py prepare-source
+  -> .cache/plasma-workspace-source/<profile>/source
+  -> python3 scripts/manage.py sync-digital-clock
+  -> applets/<profile>/contents/config/
+  -> applets/<profile>/contents/ui/*.qml
+  -> patches/digital-clock/<profile>/*.patch
   -> applet-owned/config/config.qml overwrites contents/config/config.qml
   -> patched Swan Dict applet
 ```
@@ -167,7 +168,7 @@ scripts/sync-digital-clock.sh
 默认情况下，如果已有生成文件，脚本不会覆盖。要显式同步，需要：
 
 ```console
-SWAN_DICT_SYNC_DIGITAL_CLOCK_OVERWRITE=1 scripts/sync-digital-clock.sh
+SWAN_DICT_SYNC_DIGITAL_CLOCK_OVERWRITE=1 python3 scripts/manage.py sync-digital-clock
 ```
 
 这样做是为了让目标发行版自己的 Digital Clock QML 与其 `org.kde.plasma.private.digitalclock` 私有模块保持匹配。
@@ -620,7 +621,7 @@ OBS 构建需要包含：
 - 项目源码。
 - patch files。
 - `third_party/ECDICT/ecdict.csv`。
-- Arch fallback Digital Clock QML/config。
+- 从发行版 `plasma-workspace` 源码包生成的 profile Digital Clock QML/config。
 
 不应包含：
 
@@ -655,14 +656,14 @@ applet/contents/ui/SwanDictController.qml
 applet/contents/ui/configTranslation.qml
 ```
 
-不需要运行 `regenerate-patches.sh`。
+不需要运行 `python3 scripts/manage.py regenerate-patches`。
 
 ### 修改上游 Digital Clock 接入点
 
 修改生成文件后运行：
 
 ```console
-scripts/regenerate-patches.sh
+python3 scripts/manage.py regenerate-patches
 ```
 
 这会更新 `patches/*.patch`。注意不要让无关 patch 文件因为时间戳或格式噪声被污染。

@@ -29,10 +29,17 @@ jobs:
 
       - name: Install test dependencies
         run: |
+          if compgen -G "/etc/apt/sources.list.d/*.sources" >/dev/null; then
+            sed -i -E 's/^Types: deb$/Types: deb deb-src/' /etc/apt/sources.list.d/*.sources
+          fi
+          if [ -f /etc/apt/sources.list ]; then
+            sed -i -E 's/^# deb-src /deb-src /' /etc/apt/sources.list
+          fi
           apt-get update
           DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
             build-essential \
             cmake \
+            dpkg-dev \
             extra-cmake-modules \
             libdrm-dev \
             libepoxy-dev \
@@ -53,7 +60,9 @@ jobs:
 
       - name: Configure ASan test build
         run: |
-          SWAN_DICT_SYNC_DIGITAL_CLOCK_OVERWRITE=1 cmake -B build-asan -S . -G Ninja \
+          SWAN_DICT_PROFILE=debian/13 SWAN_DICT_PREPARE_SOURCE_OVERWRITE=1 python3 scripts/manage.py prepare-source
+          SWAN_DICT_PROFILE=debian/13 SWAN_DICT_SYNC_DIGITAL_CLOCK_OVERWRITE=1 python3 scripts/manage.py sync-digital-clock
+          cmake -B build-asan -S . -G Ninja \
             -DCMAKE_BUILD_TYPE=RelWithDebInfo \
             -DBUILD_TESTING=ON \
             -DSWAN_DICT_GENERATE_DICTIONARY=OFF \

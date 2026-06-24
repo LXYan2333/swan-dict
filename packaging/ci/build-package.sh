@@ -9,8 +9,8 @@ fi
 
 repo_root="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/../.." && pwd)"
 version="$(sed -nE 's/^project\(swan-dict VERSION ([^ ]+).*/\1/p' "${repo_root}/CMakeLists.txt" | head -n 1)"
-plasma_workspace_version="${SWAN_DICT_ARCH_PLASMA_WORKSPACE_VERSION:-6.6.5}"
 dist_dir="${repo_root}/dist/${distro}"
+profile=""
 
 if [[ -z "${version}" ]]; then
     echo "Unable to determine project version." >&2
@@ -19,24 +19,33 @@ fi
 
 mkdir -p "${dist_dir}"
 
-prepare_digital_clock_fallback() {
-    local download_root="/tmp/swan-dict-plasma-workspace"
-    local archive="${download_root}/plasma-workspace-${plasma_workspace_version}.tar.xz"
-    local extracted="${download_root}/plasma-workspace-${plasma_workspace_version}"
-    local url="https://download.kde.org/stable/plasma/${plasma_workspace_version}/plasma-workspace-${plasma_workspace_version}.tar.xz"
+case "${distro}" in
+    debian)
+        profile="debian/13"
+        ;;
+    ubuntu)
+        profile="ubuntu/26.04"
+        ;;
+    fedora)
+        profile="fedora/44"
+        ;;
+    arch)
+        profile="arch/latest"
+        ;;
+    *)
+        echo "Unknown distro: ${distro}" >&2
+        exit 1
+        ;;
+esac
 
-    mkdir -p "${download_root}"
-    if [[ ! -f "${archive}" ]]; then
-        curl -L --fail --retry 3 -o "${archive}" "${url}"
-    fi
+prepare_digital_clock_from_source_package() {
+    SWAN_DICT_PROFILE="${profile}" \
+    SWAN_DICT_PREPARE_SOURCE_OVERWRITE=1 \
+        python3 "${repo_root}/scripts/manage.py" prepare-source
 
-    if [[ ! -d "${extracted}" ]]; then
-        tar -C "${download_root}" -xf "${archive}"
-    fi
-
-    SWAN_DICT_ARCH_PLASMA_WORKSPACE_SOURCE_DIR="${extracted}" \
-    SWAN_DICT_PREPARE_ARCH_DIGITAL_CLOCK_FALLBACK_OVERWRITE=1 \
-        "${repo_root}/scripts/prepare-arch-digital-clock-fallback.sh"
+    SWAN_DICT_PROFILE="${profile}" \
+    SWAN_DICT_SYNC_DIGITAL_CLOCK_OVERWRITE=1 \
+        python3 "${repo_root}/scripts/manage.py" sync-digital-clock
 }
 
 prepare_source_tree() {
@@ -49,12 +58,23 @@ prepare_source_tree() {
         --exclude='.cache' \
         --exclude='build' \
         --exclude='dist' \
+        --exclude='applet' \
         --exclude='applet/contents/data/ecdict.sqlite' \
+        --exclude='applets/*/*/contents/data/ecdict.sqlite' \
         --exclude='third_party/ECDICT/stardict.7z' \
         --exclude='__pycache__' \
         -cf - . | tar -C "${source_dir}" -xf -
 
     echo "${source_dir}"
+}
+
+enable_deb_source_repositories() {
+    if compgen -G "/etc/apt/sources.list.d/*.sources" >/dev/null; then
+        sed -i -E 's/^Types: deb$/Types: deb deb-src/' /etc/apt/sources.list.d/*.sources
+    fi
+    if [[ -f /etc/apt/sources.list ]]; then
+        sed -i -E 's/^# deb-src /deb-src /' /etc/apt/sources.list
+    fi
 }
 
 create_source_tarball() {
@@ -68,6 +88,7 @@ create_source_tarball() {
 
 install_deb_dependencies() {
     export DEBIAN_FRONTEND=noninteractive
+    enable_deb_source_repositories
     apt-get update
     apt-get install -y --no-install-recommends ca-certificates curl git tar xz-utils
 
@@ -106,7 +127,7 @@ install_deb_dependencies() {
 
 build_deb_package() {
     install_deb_dependencies
-    prepare_digital_clock_fallback
+    prepare_digital_clock_from_source_package
 
     local tmp_dir source_dir
     tmp_dir="$(mktemp -d /tmp/swan-dict-deb.XXXXXX)"
@@ -115,7 +136,7 @@ build_deb_package() {
 
     (
         cd "${source_dir}"
-        dpkg-buildpackage -us -uc -b
+        SWAN_DICT_PROFILE="${profile}" dpkg-buildpackage -us -uc -b
     )
 
     cp "${tmp_dir}"/*.deb "${dist_dir}/"
@@ -123,9 +144,9 @@ build_deb_package() {
 }
 
 build_fedora_package() {
-    dnf -y install dnf-plugins-core rpm-build rpmdevtools ca-certificates curl git tar xz
+    dnf -y install dnf-plugins-core rpm-build rpmdevtools ca-certificates cpio curl git tar xz
     dnf -y builddep "${repo_root}/packaging/obs/swan-dict.spec"
-    prepare_digital_clock_fallback
+    prepare_digital_clock_from_source_package
 
     local rpmbuild_dir="${repo_root}/build/rpmbuild"
     mkdir -p "${rpmbuild_dir}/BUILD" "${rpmbuild_dir}/RPMS" "${rpmbuild_dir}/SOURCES" "${rpmbuild_dir}/SPECS" "${rpmbuild_dir}/SRPMS"
@@ -134,6 +155,7 @@ build_fedora_package() {
 
     rpmbuild -ba \
         --define "_topdir ${rpmbuild_dir}" \
+        --define "swan_dict_profile ${profile}" \
         "${rpmbuild_dir}/SPECS/swan-dict.spec"
 
     find "${rpmbuild_dir}/RPMS" "${rpmbuild_dir}/SRPMS" -type f \( -name '*.rpm' -o -name '*.src.rpm' \) -exec cp {} "${dist_dir}/" \;
@@ -146,6 +168,7 @@ build_arch_package() {
         ca-certificates \
         cmake \
         curl \
+        devtools \
         extra-cmake-modules \
         git \
         kconfig \
@@ -170,7 +193,7 @@ build_arch_package() {
         wayland-protocols \
         xz
 
-    prepare_digital_clock_fallback
+    prepare_digital_clock_from_source_package
 
     local build_dir="/tmp/swan-dict-arch"
     rm -rf "${build_dir}"
@@ -197,10 +220,6 @@ case "${distro}" in
         ;;
     arch)
         build_arch_package
-        ;;
-    *)
-        echo "Unknown distro: ${distro}" >&2
-        exit 1
         ;;
 esac
 

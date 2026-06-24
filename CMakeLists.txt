@@ -17,6 +17,9 @@ set(CMAKE_AUTOMOC ON)
 
 option(SWAN_DICT_GENERATE_DICTIONARY "Generate the bundled ECDICT SQLite database during the build" ON)
 option(SWAN_DICT_BUILD_KWIN_HELPER "Build the optional KWin effect helper for global mouse click detection" ON)
+set(SWAN_DICT_PROFILE "debian/13" CACHE STRING "Distro applet profile to build, for example debian/13, fedora/44, ubuntu/26.04, or arch/latest")
+set(SWAN_DICT_APPLET_ROOT "${CMAKE_CURRENT_SOURCE_DIR}/applets/${SWAN_DICT_PROFILE}" CACHE PATH "Prepared Swan Dict applet package root")
+file(RELATIVE_PATH SWAN_DICT_APPLET_PACKAGE_PATH "${CMAKE_CURRENT_SOURCE_DIR}" "${SWAN_DICT_APPLET_ROOT}")
 
 find_package(ECM REQUIRED NO_MODULE)
 set(CMAKE_MODULE_PATH ${ECM_MODULE_PATH})
@@ -24,9 +27,7 @@ set(CMAKE_MODULE_PATH ${ECM_MODULE_PATH})
 include(KDEInstallDirs)
 include(CTest)
 
-if (SWAN_DICT_GENERATE_DICTIONARY)
-    find_package(Python3 REQUIRED COMPONENTS Interpreter)
-endif()
+find_package(Python3 REQUIRED COMPONENTS Interpreter)
 find_package(Qt6 REQUIRED COMPONENTS Core DBus Gui Network Qml Sql)
 if (COMMAND qt_policy)
     qt_policy(SET QTP0001 NEW)
@@ -37,7 +38,12 @@ include(${KF6Package_DIR}/KF6PackageMacros.cmake)
 include(${Plasma_DIR}/PlasmaMacros.cmake)
 
 execute_process(
-    COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/scripts/sync-digital-clock.sh
+    COMMAND ${CMAKE_COMMAND} -E env
+        SWAN_DICT_PROFILE=${SWAN_DICT_PROFILE}
+        SWAN_DICT_APPLET_ROOT=${SWAN_DICT_APPLET_ROOT}
+        ${Python3_EXECUTABLE}
+        ${CMAKE_CURRENT_SOURCE_DIR}/scripts/manage.py
+        sync-digital-clock
     WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
     RESULT_VARIABLE sync_digital_clock_result
 )
@@ -61,7 +67,7 @@ ki18n_install(po)
 
 if (SWAN_DICT_GENERATE_DICTIONARY)
     set(SWAN_DICT_ECDICT_CSV ${CMAKE_CURRENT_SOURCE_DIR}/third_party/ECDICT/ecdict.csv)
-    set(SWAN_DICT_ECDICT_DB ${CMAKE_CURRENT_SOURCE_DIR}/applet/contents/data/ecdict.sqlite)
+    set(SWAN_DICT_ECDICT_DB ${SWAN_DICT_APPLET_ROOT}/contents/data/ecdict.sqlite)
 
     if (NOT EXISTS ${SWAN_DICT_ECDICT_CSV})
         message(FATAL_ERROR "ECDICT CSV not found: ${SWAN_DICT_ECDICT_CSV}")
@@ -82,4 +88,4 @@ if (SWAN_DICT_GENERATE_DICTIONARY)
     add_custom_target(swandict_dictionary ALL DEPENDS ${SWAN_DICT_ECDICT_DB})
 endif()
 
-plasma_install_package(applet com.github.LXYan2333.swan-dict)
+plasma_install_package(${SWAN_DICT_APPLET_PACKAGE_PATH} com.github.LXYan2333.swan-dict)

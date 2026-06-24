@@ -1,0 +1,30 @@
+--- upstream/contents/ui/configAppearance.qml
++++ current/contents/ui/configAppearance.qml
+@@ -22,6 +22,27 @@
+ 
+ KCMUtils.SimpleKCM {
+     id: appearancePage
++
++    readonly property string upstreamTranslationDomain: "plasma_applet_org.kde.plasma.digitalclock"
++    function i18n(message, arg1, arg2) {
++        if (arguments.length === 3) {
++            return i18nd(upstreamTranslationDomain, message, arg1, arg2);
++        }
++        if (arguments.length === 2) {
++            return i18nd(upstreamTranslationDomain, message, arg1);
++        }
++        return i18nd(upstreamTranslationDomain, message);
++    }
++    function i18nc(context, message, arg1, arg2) {
++        if (arguments.length === 4) {
++            return i18ndc(upstreamTranslationDomain, context, message, arg1, arg2);
++        }
++        if (arguments.length === 3) {
++            return i18ndc(upstreamTranslationDomain, context, message, arg1);
++        }
++        return i18ndc(upstreamTranslationDomain, context, message);
++    }
++
+     property alias cfg_autoFontAndSize: autoFontAndSizeRadioButton.checked
+ 
+     // boldText and fontStyleName are not used in DigitalClock.qml

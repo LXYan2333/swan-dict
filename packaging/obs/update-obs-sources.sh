@@ -6,7 +6,6 @@ repo_root="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/../.." && pwd)"
 project="${SWAN_DICT_OBS_PROJECT:-home:lxyan3}"
 package="${SWAN_DICT_OBS_PACKAGE:-swan-dict}"
 checkout_root="${SWAN_DICT_OBS_CHECKOUT_DIR:-${RUNNER_TEMP:-/tmp}/swan-dict-obs}"
-arch_plasma_version="${SWAN_DICT_ARCH_PLASMA_WORKSPACE_VERSION:-6.6.5}"
 
 read_project_version() {
     sed -nE 's/^project\(swan-dict VERSION ([^ ]+).*/\1/p' "${repo_root}/CMakeLists.txt" | head -n 1
@@ -31,32 +30,20 @@ require_command() {
     fi
 }
 
-require_command curl
 require_command dpkg-source
 require_command osc
+require_command python3
 require_command tar
 
-prepare_arch_plasma_source() {
-    if [[ -n "${SWAN_DICT_ARCH_PLASMA_WORKSPACE_SOURCE_DIR:-}" ]]; then
-        return
-    fi
+prepare_profile_applet() {
+    local profile="$1"
+    SWAN_DICT_PROFILE="${profile}" \
+    SWAN_DICT_PREPARE_SOURCE_OVERWRITE=1 \
+        python3 "${repo_root}/scripts/manage.py" prepare-source
 
-    local download_root="${SWAN_DICT_ARCH_PLASMA_WORKSPACE_DOWNLOAD_DIR:-${RUNNER_TEMP:-/tmp}/swan-dict-arch-plasma-workspace}"
-    local archive="${download_root}/plasma-workspace-${arch_plasma_version}.tar.xz"
-    local extracted="${download_root}/plasma-workspace-${arch_plasma_version}"
-    local url="https://download.kde.org/stable/plasma/${arch_plasma_version}/plasma-workspace-${arch_plasma_version}.tar.xz"
-
-    mkdir -p "${download_root}"
-
-    if [[ ! -f "${archive}" ]]; then
-        curl -L --fail --retry 3 -o "${archive}" "${url}"
-    fi
-
-    if [[ ! -d "${extracted}" ]]; then
-        tar -C "${download_root}" -xf "${archive}"
-    fi
-
-    export SWAN_DICT_ARCH_PLASMA_WORKSPACE_SOURCE_DIR="${extracted}"
+    SWAN_DICT_PROFILE="${profile}" \
+    SWAN_DICT_SYNC_DIGITAL_CLOCK_OVERWRITE=1 \
+        python3 "${repo_root}/scripts/manage.py" sync-digital-clock
 }
 
 prepare_source_tree() {
@@ -69,7 +56,9 @@ prepare_source_tree() {
         --exclude='.git' \
         --exclude='.cache' \
         --exclude='build' \
+        --exclude='applet' \
         --exclude='applet/contents/data/ecdict.sqlite' \
+        --exclude='applets/*/*/contents/data/ecdict.sqlite' \
         --exclude='third_party/ECDICT/stardict.7z' \
         --exclude='__pycache__' \
         -cf - . | tar -C "${source_dir}" -xf -
@@ -133,10 +122,9 @@ stage_obs_files() {
 tmp_dir="$(mktemp -d "${SWAN_DICT_OBS_TMP_DIR:-${RUNNER_TEMP:-/tmp}/swan-dict-obs-src.XXXXXX}")"
 trap 'rm -rf "${tmp_dir}"' EXIT
 
-prepare_arch_plasma_source
-
-SWAN_DICT_PREPARE_ARCH_DIGITAL_CLOCK_FALLBACK_OVERWRITE=1 \
-    "${repo_root}/scripts/prepare-arch-digital-clock-fallback.sh"
+for profile in debian/13 ubuntu/26.04 fedora/44 arch/latest; do
+    prepare_profile_applet "${profile}"
+done
 
 package_dir="$(checkout_obs_package)"
 source_dir="$(prepare_source_tree "${tmp_dir}")"
